@@ -386,6 +386,41 @@
       background-color: var(--cat-holiday) !important; 
       color: #881337 !important; 
     }
+    
+    
+    .weekly-header {
+  display: flex;
+  justify-content: space-between;
+  align-content: center;
+  align-items: center;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.weekly-nav-btns {
+  display: flex;
+  gap: 4px;
+}
+.btn-nav-sm {
+  padding: 4px 8px;
+  font-size: 0.78rem;
+  border: 1px solid var(--border-color, #e2e8f0);
+  background: #fff;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-nav-sm:hover {
+  background: #f1f5f9;
+}
+.btn-nav-sm.active {
+  background: var(--primary-color, #3b82f6);
+  color: #fff;
+  border-color: var(--primary-color, #3b82f6);
+}
+
+
+
   </style>
 </head>
 <body>
@@ -488,13 +523,16 @@
       <div class="grid-days" id="calendarGrid"></div>
 
       <!-- 주간 상세 일정 영역 -->
-      <div class="weekly-section">
-        <div class="weekly-header">
-          <h3 id="weeklyTitle">📅 이번 주 일정</h3>
+      <!-- 💡 [수정] 주간 일정 헤더 (이전주 / 이번주 / 다음주 버튼 추가) -->
+      <div class="weekly-header">
+        <h3 id="weeklyTitle">📅 주간 일정</h3>
+        <div class="weekly-nav-btns">
+          <button type="button" id="btnPrevWeek" class="btn-nav-sm">◀ 이전주</button>
+          <button type="button" id="btnThisWeek" class="btn-nav-sm active">이번주</button>
+          <button type="button" id="btnNextWeek" class="btn-nav-sm">다음주 ▶</button>
         </div>
-        <div id="weeklyEventList" class="weekly-event-list"></div>
       </div>
-    </div>
+
 
     <!-- 우측 / 하단 일정 등록 사이드바 -->
     <div class="sidebar">
@@ -530,7 +568,7 @@
     </div>
   </div>
 
-      <!-- Firebase SDK 모듈 로드 -->
+  <!-- Firebase SDK 모듈 로드 -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getFirestore, collection, addDoc, deleteDoc, doc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
@@ -557,6 +595,7 @@
 
     let currentDate = new Date();
     let selectedDateStr = formatDateStr(new Date());
+    let currentWeeklyDate = new Date(); // 💡 주간 일정 조회 기준 날짜
     let startDateSelection = null;
     let endDateSelection = null;
     let events = [];
@@ -581,7 +620,7 @@
     const editCategory = document.getElementById('editCategory');
     const btnCancelEdit = document.getElementById('btnCancelEdit');
 
-    // 등록 모달 요소 (기간 선택 추가)
+    // 등록 모달 요소
     const addModal = document.getElementById('addModal');
     const addEventForm = document.getElementById('addEventForm');
     const addStartDate = document.getElementById('addStartDate');
@@ -624,6 +663,7 @@
         renderEventList();
       });
 
+      // 월간 달력 내비게이션
       document.getElementById('prevBtn').addEventListener('click', () => {
         currentDate.setMonth(currentDate.getMonth() - 1);
         renderCalendar();
@@ -636,11 +676,36 @@
         currentDate = new Date();
         const today = formatDateStr(currentDate);
         selectedDateStr = today;
+        currentWeeklyDate = new Date();
         startDateSelection = today;
         endDateSelection = today;
         updateFormDates(today, today);
         renderCalendar();
       });
+
+      // 💡 주간 일정 내비게이션 버튼 이벤트 추가
+      const btnPrevWeek = document.getElementById('btnPrevWeek');
+      const btnThisWeek = document.getElementById('btnThisWeek');
+      const btnNextWeek = document.getElementById('btnNextWeek');
+
+      if (btnPrevWeek) {
+        btnPrevWeek.addEventListener('click', () => {
+          currentWeeklyDate.setDate(currentWeeklyDate.getDate() - 7);
+          renderWeeklyEvents(currentWeeklyDate);
+        });
+      }
+      if (btnThisWeek) {
+        btnThisWeek.addEventListener('click', () => {
+          currentWeeklyDate = new Date();
+          renderWeeklyEvents(currentWeeklyDate);
+        });
+      }
+      if (btnNextWeek) {
+        btnNextWeek.addEventListener('click', () => {
+          currentWeeklyDate.setDate(currentWeeklyDate.getDate() + 7);
+          renderWeeklyEvents(currentWeeklyDate);
+        });
+      }
 
       // 우측 사이드바 등록 폼 제출
       if (eventForm) {
@@ -677,7 +742,7 @@
         });
       }
 
-      // 새 일정 등록 모달 폼 제출 (시작일~종료일 지정 가능)
+      // 새 일정 등록 모달 폼 제출
       if (addEventForm) {
         addEventForm.addEventListener('submit', async (e) => {
           e.preventDefault();
@@ -706,7 +771,7 @@
         });
       }
 
-      // 수동 날짜 입력 변경 시 달력에 반영
+      // 수동 날짜 입력 변경 시 반영
       if (eventStartDateInput) {
         eventStartDateInput.addEventListener('change', () => {
           startDateSelection = eventStartDateInput.value;
@@ -728,14 +793,14 @@
         });
       }
 
-      // 수정 취소 버튼
+      // 수정 취소
       if (btnCancelEdit) {
         btnCancelEdit.addEventListener('click', () => {
           editModal.style.display = 'none';
         });
       }
 
-      // 수정 모달 내 삭제 버튼 이벤트 처리
+      // 삭제
       const btnDeleteModal = document.getElementById('btnDeleteModal');
       if (btnDeleteModal) {
         btnDeleteModal.addEventListener('click', async () => {
@@ -821,9 +886,9 @@
       return fixedHolidays[dateStr.slice(5)] || null;
     }
 
-    // 주간 일정 렌더링
-    function renderWeeklyEvents(targetDateStr) {
-      const targetDate = targetDateStr ? new Date(targetDateStr) : new Date();
+    // 💡 주간 일정 렌더링 (Date 객체/문자열 모두 지원)
+    function renderWeeklyEvents(targetDateInput) {
+      const targetDate = targetDateInput ? new Date(targetDateInput) : new Date();
       const { sunday, saturday } = getWeekRange(targetDate);
       const startStr = formatDateStr(sunday);
       const endStr = formatDateStr(saturday);
@@ -842,7 +907,7 @@
       listEl.innerHTML = '';
 
       if (weeklyEvents.length === 0) {
-        listEl.innerHTML = `<div class="no-events">이번 주에 등록된 일정이 없습니다.</div>`;
+        listEl.innerHTML = `<div class="no-events">해당 주간에 등록된 일정이 없습니다.</div>`;
         return;
       }
 
@@ -939,9 +1004,10 @@
           dayCell.appendChild(dotsContainer);
         }
 
-        // 날짜 클릭 시 모달 오픈 (클릭한 날짜로 시작일/종료일 기본 지정)
+        // 날짜 클릭 시 모달 오픈 및 주간 일정 갱신
         dayCell.addEventListener('click', () => {
           selectedDateStr = dateStr;
+          currentWeeklyDate = new Date(dateStr);
 
           if (addStartDate && addEndDate) {
             addStartDate.value = dateStr;
@@ -953,13 +1019,13 @@
           dayCell.classList.add('selected-day');
 
           if (addModal) addModal.style.display = 'flex';
-          renderWeeklyEvents(selectedDateStr);
+          renderWeeklyEvents(currentWeeklyDate);
         });
 
         calendarGrid.appendChild(dayCell);
       }
 
-      renderWeeklyEvents(selectedDateStr || todayStr);
+      renderWeeklyEvents(currentWeeklyDate);
     }
 
     // 사이드바 이벤트 리스트 렌더링 & 삭제
@@ -1008,6 +1074,7 @@
       }
     }
   </script>
+
 
 
 </body>
