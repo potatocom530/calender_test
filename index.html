@@ -19,10 +19,6 @@
       --color-saturday: #2563eb;
       --color-sunday: #dc2626;
 
-      /* 파스텔 컬러 팔레트 */
-      --cat-work: #bae6fd;      /* 파스텔 하늘 (업무) */
-      --cat-personal: #fef08a;  /* 파스텔 노랑 (개인) */
-      --cat-important: #fecdd3; /* 파스텔 핑크 (중요) */
       --cat-holiday: #fda4af;   /* 파스텔 로즈 (공휴일) */
     }
 
@@ -112,6 +108,34 @@
     .emoji-option.selected {
       border-color: var(--primary-color);
       background-color: #eff6ff;
+    }
+
+    /* 모던 뉴트럴 색상 선택 칩 */
+    .color-palette {
+      display: flex;
+      gap: 10px;
+      margin-top: 6px;
+      justify-content: space-between;
+    }
+
+    .color-chip {
+      flex: 1;
+      height: 38px;
+      border-radius: 10px;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: all 0.15s ease;
+      box-shadow: inset 0 0 0 1px rgba(0,0,0,0.05);
+    }
+
+    .color-chip:hover {
+      transform: translateY(-2px);
+    }
+
+    .color-chip.selected {
+      border-color: #1e293b;
+      transform: scale(1.08);
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.15);
     }
 
     /* 메인 앱 레이아웃 */
@@ -218,7 +242,7 @@
     .day-cell.sun .day-number,
     .day-cell.holiday .day-number { color: var(--color-sunday); }
 
-    /* 파스텔 도트 */
+    /* 파스텔/뉴트럴 도트 */
     .dots-container {
       display: flex;
       gap: 3px;
@@ -306,6 +330,7 @@
       font-size: 0.9rem;
       box-shadow: 0 1px 3px rgba(0,0,0,0.05);
       cursor: pointer;
+      color: #24292f;
       transition: transform 0.1s ease, box-shadow 0.1s ease;
     }
 
@@ -336,7 +361,7 @@
 
     .weekly-card .card-author {
       font-size: 0.85rem;
-      background: rgba(255,255,255,0.6);
+      background: rgba(255,255,255,0.65);
       padding: 2px 6px;
       border-radius: 4px;
       margin-left: 8px;
@@ -494,9 +519,6 @@
       cursor: pointer; font-size: 1rem; margin-top: 8px; width: 100%;
     }
 
-    .bg-work { background-color: var(--cat-work) !important; color: #0c4a6e !important; }
-    .bg-personal { background-color: var(--cat-personal) !important; color: #713f12 !important; }
-    .bg-important { background-color: var(--cat-important) !important; color: #881337 !important; }
     .bg-holiday { background-color: var(--cat-holiday) !important; color: #881337 !important; }
   </style>
 </head>
@@ -539,12 +561,15 @@
           </div>
         </div>
         <div class="form-group">
-          <label for="editCategory">카테고리</label>
-          <select id="editCategory">
-            <option value="work">업무</option>
-            <option value="personal">개인</option>
-            <option value="important">중요</option>
-          </select>
+          <label>일정 색상 (모던 뉴트럴)</label>
+          <div class="color-palette" id="editColorPalette">
+            <div class="color-chip" data-color="#d1e0d7" style="background-color: #d1e0d7;" title="세이지"></div>
+            <div class="color-chip" data-color="#f3d8c7" style="background-color: #f3d8c7;" title="피치"></div>
+            <div class="color-chip" data-color="#e9e1d4" style="background-color: #e9e1d4;" title="오트밀"></div>
+            <div class="color-chip" data-color="#e2ded9" style="background-color: #e2ded9;" title="베이지그레이"></div>
+            <div class="color-chip" data-color="#ddd7e4" style="background-color: #ddd7e4;" title="라벤더"></div>
+            <div class="color-chip" data-color="#d2dae2" style="background-color: #d2dae2;" title="데님"></div>
+          </div>
         </div>
         <div class="form-group">
           <label for="editMemo">메모 (세부 일정)</label>
@@ -553,7 +578,7 @@
 
         <!-- 💬 코멘트(댓글) 영역 -->
         <div class="comments-section">
-          <h4>💬 일정 코멘트</h4>
+          <h4>💬 코멘트</h4>
           <div class="comments-list" id="commentsList">
             <!-- 댓글 항목들이 여기에 생성됨 -->
           </div>
@@ -589,12 +614,15 @@
           </div>
         </div>
         <div class="form-group">
-          <label for="addCategory">카테고리</label>
-          <select id="addCategory">
-            <option value="work">업무</option>
-            <option value="personal">개인</option>
-            <option value="important">중요</option>
-          </select>
+          <label>일정 색상 (모던 뉴트럴)</label>
+          <div class="color-palette" id="addColorPalette">
+            <div class="color-chip selected" data-color="#d1e0d7" style="background-color: #d1e0d7;" title="세이지"></div>
+            <div class="color-chip" data-color="#f3d8c7" style="background-color: #f3d8c7;" title="피치"></div>
+            <div class="color-chip" data-color="#e9e1d4" style="background-color: #e9e1d4;" title="오트밀"></div>
+            <div class="color-chip" data-color="#e2ded9" style="background-color: #e2ded9;" title="베이지그레이"></div>
+            <div class="color-chip" data-color="#ddd7e4" style="background-color: #ddd7e4;" title="라벤더"></div>
+            <div class="color-chip" data-color="#d2dae2" style="background-color: #d2dae2;" title="데님"></div>
+          </div>
         </div>
         <div class="form-group">
           <label for="addMemo">메모 (세부 일정)</label>
@@ -683,6 +711,8 @@
     let currentWeeklyDate = new Date();
     let events = [];
     let currentUser = "🎧"; // 기본 선택 이모지 프로필
+    let selectedAddColor = "#d1e0d7";
+    let selectedEditColor = "#d1e0d7";
 
     const monthYearText = document.getElementById('monthYear');
     const calendarGrid = document.getElementById('calendarGrid');
@@ -694,7 +724,6 @@
     const editTitle = document.getElementById('editTitle');
     const editStartDate = document.getElementById('editStartDate');
     const editEndDate = document.getElementById('editEndDate');
-    const editCategory = document.getElementById('editCategory');
     const editMemo = document.getElementById('editMemo');
     const btnCancelEdit = document.getElementById('btnCancelEdit');
 
@@ -709,7 +738,6 @@
     const addStartDate = document.getElementById('addStartDate');
     const addEndDate = document.getElementById('addEndDate');
     const addTitle = document.getElementById('addTitle');
-    const addCategory = document.getElementById('addCategory');
     const addMemo = document.getElementById('addMemo');
     const btnCancelAdd = document.getElementById('btnCancelAdd');
 
@@ -719,6 +747,24 @@
         document.querySelectorAll('.emoji-option').forEach(opt => opt.classList.remove('selected'));
         this.classList.add('selected');
         currentUser = this.getAttribute('data-emoji');
+      });
+    });
+
+    // 컬러 칩 선택 기능 (등록 모달)
+    document.querySelectorAll('#addColorPalette .color-chip').forEach(chip => {
+      chip.addEventListener('click', function() {
+        document.querySelectorAll('#addColorPalette .color-chip').forEach(c => c.classList.remove('selected'));
+        this.classList.add('selected');
+        selectedAddColor = this.getAttribute('data-color');
+      });
+    });
+
+    // 컬러 칩 선택 기능 (수정 모달)
+    document.querySelectorAll('#editColorPalette .color-chip').forEach(chip => {
+      chip.addEventListener('click', function() {
+        document.querySelectorAll('#editColorPalette .color-chip').forEach(c => c.classList.remove('selected'));
+        this.classList.add('selected');
+        selectedEditColor = this.getAttribute('data-color');
       });
     });
 
@@ -744,6 +790,7 @@
             ...data,
             startDate: data.startDate || data.date,
             endDate: data.endDate || data.date,
+            color: data.color || "#d1e0d7",
             memo: data.memo || "",
             comments: data.comments || []
           };
@@ -830,7 +877,7 @@
               startDate: sDate,
               endDate: eDate,
               date: sDate,
-              category: addCategory.value,
+              color: selectedAddColor,
               memo: addMemo.value.trim(),
               author: currentUser,
               comments: [],
@@ -886,7 +933,7 @@
               startDate: sDate,
               endDate: eDate,
               date: sDate,
-              category: editCategory.value,
+              color: selectedEditColor,
               memo: editMemo.value.trim()
             });
             editModal.style.display = 'none';
@@ -944,9 +991,18 @@
       editTitle.value = eventObj.title;
       editStartDate.value = eventObj.startDate;
       editEndDate.value = eventObj.endDate;
-      editCategory.value = eventObj.category || 'work';
       editMemo.value = eventObj.memo || '';
       
+      // 저장된 컬러 매칭
+      selectedEditColor = eventObj.color || '#d1e0d7';
+      document.querySelectorAll('#editColorPalette .color-chip').forEach(chip => {
+        if (chip.getAttribute('data-color') === selectedEditColor) {
+          chip.classList.add('selected');
+        } else {
+          chip.classList.remove('selected');
+        }
+      });
+
       renderCommentsInModal(eventObj.comments || [], eventObj.id);
       editModal.style.display = 'flex';
     }
@@ -1040,10 +1096,9 @@
         if (hName) {
           weeklyHolidays.push({
             id: 'holiday_' + curStr,
-            title: `🔴 ${hName}`,
+            title: `${hName}`,
             startDate: curStr,
             endDate: curStr,
-            category: 'holiday',
             isHolidayItem: true
           });
         }
@@ -1069,10 +1124,10 @@
         const card = document.createElement('div');
         card.classList.add('weekly-card');
 
-        if (e.category) {
-          card.classList.add(`bg-${e.category}`);
+        if (e.isHolidayItem) {
+          card.classList.add('bg-holiday');
         } else {
-          card.style.backgroundColor = '#e0f2fe';
+          card.style.backgroundColor = e.color || '#d1e0d7';
         }
 
         let dateDisplay = '';
@@ -1085,7 +1140,6 @@
           dateDisplay = `${parseInt(sm)}.${parseInt(sd)}~${parseInt(em)}.${parseInt(ed)}`;
         }
 
-        // 공휴일 카드는 날짜와 공휴일 이름만 간략하게 표기
         let cardContent = `
           <div class="weekly-card-header">
             <span class="card-date">${dateDisplay}</span>
@@ -1122,20 +1176,13 @@
       sortedEvents.forEach(e => {
         const card = document.createElement('div');
         card.classList.add('weekly-card');
-
-        if (e.category) {
-          card.classList.add(`bg-${e.category}`);
-        } else {
-          card.style.backgroundColor = '#e0f2fe';
-        }
+        card.style.backgroundColor = e.color || '#d1e0d7';
 
         let dateDisplay = '';
         const [sy, sm, sd] = e.startDate.split('-');
         const [ey, em, ed] = e.endDate.split('-');
         
-        // 연도 2자리로 변환 (2026 -> 26)
         const shortSy = sy.slice(-2);
-        const shortEy = ey.slice(-2);
 
         if (e.startDate === e.endDate) {
           dateDisplay = `${shortSy}.${parseInt(sm)}.${parseInt(sd)}`;
@@ -1211,7 +1258,7 @@
         dayEvents.slice(0, 3).forEach(e => {
           const dot = document.createElement('div');
           dot.classList.add('event-dot');
-          dot.classList.add(`bg-${e.category || 'work'}`);
+          dot.style.backgroundColor = e.color || '#d1e0d7';
           dotsContainer.appendChild(dot);
         });
 
