@@ -2,7 +2,8 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- viewport 메타 태그 교체 -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>실시간 공유 캘린더</title>
   <style>
     :root {
@@ -225,6 +226,39 @@
     .bg-personal { background-color: var(--cat-personal); }
     .bg-important { background-color: var(--cat-important); }
     .bg-holiday { background-color: var(--cat-holiday); }
+
+
+
+/* 1. 터치 시 파란색 하이라이트 박스 제거 & 드래그 방지 */
+* {
+  -webkit-tap-highlight-color: transparent;
+  user-select: none; /* 텍스트 드래그 방지 (입력창 제외) */
+}
+
+input, textarea {
+  user-select: text; /* 입력창은 텍스트 선택 가능하도록 복구 */
+}
+
+/* 2. 아이폰 iOS에서 버튼/input 기본 스타일 찌그러짐 방지 */
+input, button, select {
+  -webkit-appearance: none;
+  border-radius: 8px; /* 부드러운 모서리 */
+}
+
+/* 3. 모바일 스크롤 부드럽게 */
+body {
+  -webkit-overflow-scrolling: touch;
+  touch-action: manipulation; /* double-tap 확대 방지 */
+}
+
+
+    /* iOS 아이폰에서 input 포커스 시 화면 자동 확대 방지 (폰트 16px 이상 유지) */
+input[type="text"], 
+input[type="date"], 
+input[type="password"] {
+  font-size: 16px !important; 
+}
+    
   </style>
 </head>
 <body>
