@@ -234,11 +234,41 @@
       border-top: 1px dashed var(--border-color);
     }
 
+    .weekly-header {
+      display: flex;
+      justify-content: space-between;
+      align-content: center;
+      align-items: center;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
     .weekly-header h3 {
       font-size: 0.95rem;
       font-weight: 700;
       color: #334155;
-      margin-bottom: 12px;
+    }
+
+    .weekly-nav-btns {
+      display: flex;
+      gap: 4px;
+    }
+
+    .btn-nav-sm {
+      padding: 4px 8px;
+      font-size: 0.78rem;
+      border: 1px solid var(--border-color, #e2e8f0);
+      background: #fff;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-nav-sm:hover { background: #f1f5f9; }
+    .btn-nav-sm.active {
+      background: var(--primary-color, #3b82f6);
+      color: #fff;
+      border-color: var(--primary-color, #3b82f6);
     }
 
     .weekly-event-list {
@@ -386,41 +416,6 @@
       background-color: var(--cat-holiday) !important; 
       color: #881337 !important; 
     }
-    
-    
-    .weekly-header {
-  display: flex;
-  justify-content: space-between;
-  align-content: center;
-  align-items: center;
-  margin-bottom: 12px;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-.weekly-nav-btns {
-  display: flex;
-  gap: 4px;
-}
-.btn-nav-sm {
-  padding: 4px 8px;
-  font-size: 0.78rem;
-  border: 1px solid var(--border-color, #e2e8f0);
-  background: #fff;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-.btn-nav-sm:hover {
-  background: #f1f5f9;
-}
-.btn-nav-sm.active {
-  background: var(--primary-color, #3b82f6);
-  color: #fff;
-  border-color: var(--primary-color, #3b82f6);
-}
-
-
-
   </style>
 </head>
 <body>
@@ -436,7 +431,7 @@
     </div>
   </div>
 
-    <!-- 일정 수정 모달 -->
+  <!-- 일정 수정 모달 -->
   <div id="editModal" class="modal-overlay" style="display: none;">
     <div class="modal-box">
       <h3>✏️ 일정 수정</h3>
@@ -464,13 +459,13 @@
           </select>
         </div>
         <button type="submit" class="btn-submit">저장하기</button>
-        <!-- 💡 삭제하기 버튼 추가 -->
         <button type="button" class="btn-secondary" id="btnDeleteModal" style="background: #fee2e2; color: #dc2626; margin-top: 8px;">삭제하기</button>
         <button type="button" class="btn-secondary" id="btnCancelEdit" style="margin-top: 4px;">취소</button>
       </form>
     </div>
   </div>
-    <!-- 💡 [수정] 새 일정 등록 모달 (기간 선택 가능) -->
+
+  <!-- 새 일정 등록 모달 -->
   <div id="addModal" class="modal-overlay" style="display: none;">
     <div class="modal-box">
       <h3>➕ 새 일정 등록</h3>
@@ -502,8 +497,6 @@
     </div>
   </div>
 
-
-
   <div class="app-container">
     <!-- 메인 달력 카드 -->
     <div class="card">
@@ -523,16 +516,19 @@
       <div class="grid-days" id="calendarGrid"></div>
 
       <!-- 주간 상세 일정 영역 -->
-      <!-- 💡 [수정] 주간 일정 헤더 (이전주 / 이번주 / 다음주 버튼 추가) -->
-      <div class="weekly-header">
-        <h3 id="weeklyTitle">📅 주간 일정</h3>
-        <div class="weekly-nav-btns">
-          <button type="button" id="btnPrevWeek" class="btn-nav-sm">◀ 이전주</button>
-          <button type="button" id="btnThisWeek" class="btn-nav-sm active">이번주</button>
-          <button type="button" id="btnNextWeek" class="btn-nav-sm">다음주 ▶</button>
+      <div class="weekly-section">
+        <div class="weekly-header">
+          <h3 id="weeklyTitle">📅 주간 일정</h3>
+          <div class="weekly-nav-btns">
+            <button type="button" id="btnPrevWeek" class="btn-nav-sm">◀ 이전주</button>
+            <button type="button" id="btnThisWeek" class="btn-nav-sm active">이번주</button>
+            <button type="button" id="btnNextWeek" class="btn-nav-sm">다음주 ▶</button>
+          </div>
         </div>
+        <!-- 주간 일정 리스트 출력 컨테이너 -->
+        <div class="weekly-event-list" id="weeklyEventList"></div>
       </div>
-
+    </div>
 
     <!-- 우측 / 하단 일정 등록 사이드바 -->
     <div class="sidebar">
@@ -595,7 +591,7 @@
 
     let currentDate = new Date();
     let selectedDateStr = formatDateStr(new Date());
-    let currentWeeklyDate = new Date(); // 💡 주간 일정 조회 기준 날짜
+    let currentWeeklyDate = new Date();
     let startDateSelection = null;
     let endDateSelection = null;
     let events = [];
@@ -649,7 +645,6 @@
       endDateSelection = todayStr;
       updateFormDates(todayStr, todayStr);
 
-         // 💡 onSnapshot 콜백 내부에 renderWeeklyEvents(currentWeeklyDate) 추가!
       onSnapshot(collection(db, "shared_events"), (snapshot) => {
         events = snapshot.docs.map(doc => {
           const data = doc.data();
@@ -662,9 +657,8 @@
         });
         renderCalendar();
         renderEventList();
-        renderWeeklyEvents(currentWeeklyDate); // <-- 이 줄을 추가해주세요!
+        renderWeeklyEvents(currentWeeklyDate);
       });
-
 
       // 월간 달력 내비게이션
       document.getElementById('prevBtn').addEventListener('click', () => {
@@ -686,7 +680,7 @@
         renderCalendar();
       });
 
-      // 💡 주간 일정 네비게이션 버튼 및 active 클래스 처리
+      // 주간 일정 네비게이션 버튼 및 active 클래스 처리
       const btnPrevWeek = document.getElementById('btnPrevWeek');
       const btnThisWeek = document.getElementById('btnThisWeek');
       const btnNextWeek = document.getElementById('btnNextWeek');
@@ -899,7 +893,7 @@
       return fixedHolidays[dateStr.slice(5)] || null;
     }
 
-    // 💡 주간 일정 렌더링 (Date 객체/문자열 모두 지원)
+    // 주간 일정 렌더링
     function renderWeeklyEvents(targetDateInput) {
       const targetDate = targetDateInput ? new Date(targetDateInput) : new Date();
       const { sunday, saturday } = getWeekRange(targetDate);
@@ -1087,8 +1081,5 @@
       }
     }
   </script>
-
-
-
 </body>
 </html>
