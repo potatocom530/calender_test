@@ -563,68 +563,184 @@ const firebaseConfig = {
       return fixedHolidays[monthDay] || null;
     }
 
-    function renderCalendar() {
-      const year = currentDate.getFullYear();
-      const month = currentDate.getMonth();
 
-      monthYearText.textContent = `${year}년 ${month + 1}월`;
-      calendarGrid.innerHTML = '';
 
-      const firstDay = new Date(year, month, 1).getDay();
-      const lastDate = new Date(year, month + 1, 0).getDate();
-      const todayStr = formatDate(new Date());
 
-      for (let i = 0; i < firstDay; i++) {
-        const emptyCell = document.createElement('div');
-        emptyCell.classList.add('day-cell', 'empty');
-        calendarGrid.appendChild(emptyCell);
-      }
 
-      for (let day = 1; day <= lastDate; day++) {
-        const cellDate = new Date(year, month, day);
-        const dayOfWeek = cellDate.getDay();
-        const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-        const holidayName = getHolidayName(dateStr);
 
-        const dayCell = document.createElement('div');
-        dayCell.classList.add('day-cell');
 
-        if (dayOfWeek === 0) dayCell.classList.add('sun');
-        if (dayOfWeek === 6) dayCell.classList.add('sat');
-        if (holidayName) dayCell.classList.add('holiday');
-        if (dateStr === todayStr) dayCell.classList.add('today');
 
-        dayCell.innerHTML = `<div class="day-number">${day}</div>`;
 
-        const dotsContainer = document.createElement('div');
-        dotsContainer.classList.add('event-dots');
 
-        if (holidayName) {
-          const holidayBadge = document.createElement('div');
-          holidayBadge.classList.add('event-badge', 'bg-holiday');
-          holidayBadge.textContent = holidayName;
-          dotsContainer.appendChild(holidayBadge);
-        }
 
-        const dayEvents = events.filter(e => e.date === dateStr);
-        dayEvents.forEach(e => {
-          const badge = document.createElement('div');
-          badge.classList.add('event-badge', `bg-${e.category}`);
-          badge.textContent = `${e.title}`;
-          dotsContainer.appendChild(badge);
-        });
 
-        if (holidayName || dayEvents.length > 0) {
-          dayCell.appendChild(dotsContainer);
-        }
 
-        dayCell.addEventListener('click', () => {
-          eventDateInput.value = dateStr;
-        });
 
-        calendarGrid.appendChild(dayCell);
-      }
+    
+    // 현재 선택된 날짜 (기본값: 오늘)
+let selectedDate = new Date();
+
+// 💡 1. 주간 범위 구하기 (선택된 날짜가 속한 주의 일요일~토요일)
+function getWeekRange(date) {
+  const current = new Date(date);
+  const day = current.getDay(); // 0(일) ~ 6(토)
+  
+  const sunday = new Date(current);
+  sunday.setDate(current.getDate() - day);
+  
+  const saturday = new Date(sunday);
+  saturday.setDate(sunday.getDate() + 6);
+  
+  return { sunday, saturday };
+}
+
+// 💡 2. 하단 주간 일정 렌더링 함수
+function renderWeeklyEvents(targetDate) {
+  const { sunday, saturday } = getWeekRange(targetDate);
+  const startStr = formatDate(sunday);
+  const endStr = formatDate(saturday);
+
+  // 주간 영역 타이틀 업데이트 (예: 📅 7.26(일) ~ 8.01(토) 주간 일정)
+  const titleEl = document.getElementById('weeklyTitle');
+  if (titleEl) {
+    titleEl.textContent = `📅 ${sunday.getMonth() + 1}.${sunday.getDate()} ~ ${saturday.getMonth() + 1}.${saturday.getDate()} 주간 일정`;
+  }
+
+  // 이번 주 기간에 해당하는 일정만 필터링 후 날짜순 정렬
+  const weeklyEvents = events
+    .filter(e => e.date >= startStr && e.date <= endStr)
+    .sort((a, b) => a.date.localeCompare(b.date));
+
+  const listEl = document.getElementById('weeklyEventList');
+  if (!listEl) return;
+  listEl.innerHTML = '';
+
+  if (weeklyEvents.length === 0) {
+    listEl.innerHTML = `<div class="no-events">이번 주에 등록된 일정이 없습니다.</div>`;
+    return;
+  }
+
+  // 주간 일정 카드 생성
+  weeklyEvents.forEach(e => {
+    const card = document.createElement('div');
+    card.classList.add('weekly-card');
+
+    // 카테고리 클래스 적용 (bg-pink, bg-sky 등) 또는 직접 지정한 color
+    if (e.color) {
+      card.style.backgroundColor = e.color;
+    } else if (e.category) {
+      card.classList.add(`bg-${e.category}`);
     }
+
+    const [y, m, d] = e.date.split('-');
+    const eventDateObj = new Date(y, m - 1, d);
+    const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
+    const dayName = dayNames[eventDateObj.getDay()];
+
+    card.innerHTML = `
+      <span class="card-date">${parseInt(m)}.${parseInt(d)}(${dayName})</span>
+      <span class="card-title">${e.title}</span>
+      ${e.author ? `<span class="card-author">${e.author}</span>` : ''}
+    `;
+    listEl.appendChild(card);
+  });
+}
+
+// 💡 3. 달력 렌더링 함수 (수정 반영완료)
+function renderCalendar() {
+  const year = currentDate.getFullYear();
+  const month = currentDate.getMonth();
+
+  monthYearText.textContent = `${year}년 ${month + 1}월`;
+  calendarGrid.innerHTML = '';
+
+  const firstDay = new Date(year, month, 1).getDay();
+  const lastDate = new Date(year, month + 1, 0).getDate();
+  const todayStr = formatDate(new Date());
+  const selectedStr = formatDate(selectedDate);
+
+  // 빈 칸 생성
+  for (let i = 0; i < firstDay; i++) {
+    const emptyCell = document.createElement('div');
+    emptyCell.classList.add('day-cell', 'empty');
+    calendarGrid.appendChild(emptyCell);
+  }
+
+  // 날짜 셀 생성
+  for (let day = 1; day <= lastDate; day++) {
+    const cellDate = new Date(year, month, day);
+    const dayOfWeek = cellDate.getDay();
+    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    const holidayName = getHolidayName(dateStr);
+
+    const dayCell = document.createElement('div');
+    dayCell.classList.add('day-cell');
+
+    if (dayOfWeek === 0) dayCell.classList.add('sun');
+    if (dayOfWeek === 6) dayCell.classList.add('sat');
+    if (holidayName) dayCell.classList.add('holiday');
+    if (dateStr === todayStr) dayCell.classList.add('today');
+    
+    // 현재 선택된 날짜에 테두리 하이라이트
+    if (dateStr === selectedStr) dayCell.classList.add('selected-day');
+
+    // 날짜 숫자
+    dayCell.innerHTML = `<div class="day-number">${day}</div>`;
+
+    // 🔴 기존의 텍스트 배지(badge) 대신 도트(dot) 컨테이너 생성
+    const dotsContainer = document.createElement('div');
+    dotsContainer.classList.add('dots-container');
+
+    // 공휴일 도트 (빨간색)
+    if (holidayName) {
+      const holidayDot = document.createElement('div');
+      holidayDot.classList.add('event-dot', 'dot-holiday');
+      holidayDot.title = holidayName; // 마우스 호버 시 공휴일 명칭 툴팁
+      dotsContainer.appendChild(holidayDot);
+    }
+
+    // 일정 파스텔 도트 (최대 3개)
+    const dayEvents = events.filter(e => e.date === dateStr);
+    dayEvents.slice(0, 3).forEach(e => {
+      const dot = document.createElement('div');
+      dot.classList.add('event-dot');
+      
+      // 개별 색상이 있으면 inline 스타일 적용, 없으면 카테고리 클래스 적용
+      if (e.color) {
+        dot.style.backgroundColor = e.color;
+      } else {
+        dot.classList.add(`bg-${e.category}`);
+      }
+      dotsContainer.appendChild(dot);
+    });
+
+    if (holidayName || dayEvents.length > 0) {
+      dayCell.appendChild(dotsContainer);
+    }
+
+    // 셀 클릭 이벤트
+    dayCell.addEventListener('click', () => {
+      selectedDate = new Date(year, month, day);
+      
+      // 입력창에 선택한 날짜 채우기 (기존 기능 유지)
+      if (typeof eventDateInput !== 'undefined' && eventDateInput) {
+        eventDateInput.value = dateStr;
+      }
+
+      // 선택한 날짜 테두리 강조 UI 업데이트
+      document.querySelectorAll('.day-cell').forEach(el => el.classList.remove('selected-day'));
+      dayCell.classList.add('selected-day');
+
+      // 하단 주간 일정 리스트 동적 업데이트
+      renderWeeklyEvents(selectedDate);
+    });
+
+    calendarGrid.appendChild(dayCell);
+  }
+
+  // 달력 렌더링이 완료된 후 하단 주간 일정 리스트 도 초기화
+  renderWeeklyEvents(selectedDate);
+}
 
     // 1. 화면에 일정 목록을 그리는 함수 (수정 버튼 추가!)
     function renderEventList() {
@@ -766,66 +882,6 @@ function renderWeeklyEvents(allEvents, targetDate) {
   });
 }
 
-// 3. 달력 렌더링 로직 수정 (기존 달력 그리는 함수 내부)
-// (일정 데이터(allEvents), 연도(year), 월(month)을 받아 그릴 때)
-function renderCalendar(allEvents, currentYear, currentMonth) {
-  const gridDays = document.getElementById('calendarGrid');
-  gridDays.innerHTML = '';
-
-  // ... [기존 시작 요일/마지막 날짜 계산 로직] ...
-
-  // 날짜 Cell 생성 반복문 내부 예시
-  // for (let dayNum = 1; dayNum <= lastDate; dayNum++) {
-    const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
-    const dayEvents = allEvents.filter(e => e.date === dateStr);
-
-    const dayCell = document.createElement('div');
-    dayCell.className = 'day-cell';
-    
-    // 현재 선택한 날짜에 강조 효과
-    if (dateStr === formatDateStr(selectedDate)) {
-      dayCell.classList.add('selected-day');
-    }
-
-    // 날짜 숫자
-    const numSpan = document.createElement('span');
-    numSpan.className = 'day-number';
-    numSpan.textContent = dayNum;
-    dayCell.appendChild(numSpan);
-
-    // 💡 [도트 표시] 일정이 있으면 파스텔 도트(●) 생성
-    if (dayEvents.length > 0) {
-      const dotsContainer = document.createElement('div');
-      dotsContainer.className = 'dots-container';
-      
-      dayEvents.slice(0, 3).forEach(e => {
-        const dot = document.createElement('div');
-        dot.className = 'event-dot';
-        dot.style.backgroundColor = e.color || '#38bdf8'; // 선택한 파스텔 색상
-        dotsContainer.appendChild(dot);
-      });
-      
-      dayCell.appendChild(dotsContainer);
-    }
-
-    // 💡 [클릭 이벤트] 날짜 터치 시 주간 상세 업데이트
-    dayCell.addEventListener('click', () => {
-      selectedDate = new Date(currentYear, currentMonth, dayNum);
-      
-      // 선택한 날짜 테두리 강조
-      document.querySelectorAll('.day-cell').forEach(el => el.classList.remove('selected-day'));
-      dayCell.classList.add('selected-day');
-      
-      // 하단 주간 상세 목록 업데이트
-      renderWeeklyEvents(allEvents, selectedDate);
-    });
-
-    gridDays.appendChild(dayCell);
-  // }
-
-  // 달력이 다 그려지면 하단 주간 목록도 한 번 실행
-  renderWeeklyEvents(allEvents, selectedDate);
-}
 
     
   </script>
