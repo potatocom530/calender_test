@@ -435,6 +435,30 @@
       </form>
     </div>
   </div>
+  <!-- 💡 [신규] 새 일정 등록 모달 -->
+  <div id="addModal" class="modal-overlay" style="display: none;">
+    <div class="modal-box">
+      <h3>➕ 새 일정 등록</h3>
+      <p id="addModalDateText" style="font-weight: 600; color: var(--primary-color); margin-bottom: 12px;"></p>
+      <form id="addEventForm">
+        <input type="hidden" id="addSelectedDate">
+        <div class="form-group">
+          <label for="addTitle">일정 제목</label>
+          <input type="text" id="addTitle" placeholder="예: 회의 또는 휴가" required>
+        </div>
+        <div class="form-group">
+          <label for="addCategory">카테고리</label>
+          <select id="addCategory">
+            <option value="work">업무</option>
+            <option value="personal">개인</option>
+            <option value="important">중요</option>
+          </select>
+        </div>
+        <button type="submit" class="btn-submit">일정 공유하기</button>
+        <button type="button" class="btn-secondary" id="btnCancelAdd" style="margin-top: 6px;">취소</button>
+      </form>
+    </div>
+  </div>
 
 
   <div class="app-container">
@@ -548,6 +572,19 @@
     const editCategory = document.getElementById('editCategory');
     const btnCancelEdit = document.getElementById('btnCancelEdit');
 
+    // 💡 [추가] 등록 모달 엘리먼트 참조 (editModal 선언부 근처)
+    const addModal = document.getElementById('addModal');
+    const addEventForm = document.getElementById('addEventForm');
+    const addModalDateText = document.getElementById('addModalDateText');
+    const addSelectedDate = document.getElementById('addSelectedDate');
+    const addTitle = document.getElementById('addTitle');
+    const addCategory = document.getElementById('addCategory');
+    const btnCancelAdd = document.getElementById('btnCancelAdd');
+
+
+
+
+
     // 인증 처리
     document.getElementById('btnAuth').addEventListener('click', () => {
       const inputPass = document.getElementById('accessPassword').value;
@@ -625,6 +662,37 @@
           alert("일정 추가 중 오류가 발생했습니다: " + err.message);
         }
       });
+      
+    
+
+      // 💡 [추가] 새 일정 등록 모달 취소
+      btnCancelAdd.addEventListener('click', () => {
+        addModal.style.display = 'none';
+      });
+
+      // 💡 [추가] 새 일정 등록 폼 제출
+      addEventForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const targetDate = addSelectedDate.value;
+
+        try {
+          await addDoc(collection(db, "shared_events"), {
+            title: addTitle.value.trim(),
+            startDate: targetDate,
+            endDate: targetDate,
+            date: targetDate,
+            category: addCategory.value,
+            author: currentUser,
+            createdAt: new Date()
+          });
+          addTitle.value = '';
+          addModal.style.display = 'none';
+        } catch (err) {
+          alert("일정 추가 오류: " + err.message);
+        }
+      });
+      
+
 
       // 수동 날짜 입력 변경 시 달력에 반영
       eventStartDateInput.addEventListener('change', () => {
@@ -794,7 +862,7 @@
       });
     }
 
-    // 월간 달력 렌더링
+       // 월간 달력 렌더링
     function renderCalendar() {
       const year = currentDate.getFullYear();
       const month = currentDate.getMonth();
@@ -805,13 +873,6 @@
       const firstDay = new Date(year, month, 1).getDay();
       const lastDate = new Date(year, month + 1, 0).getDate();
       const todayStr = formatDateStr(new Date());
-
-      // 선택 범위 정렬
-      let rangeStart = startDateSelection;
-      let rangeEnd = endDateSelection;
-      if (rangeStart && rangeEnd && rangeStart > rangeEnd) {
-        [rangeStart, rangeEnd] = [rangeEnd, rangeStart];
-      }
 
       for (let i = 0; i < firstDay; i++) {
         const emptyCell = document.createElement('div');
@@ -831,17 +892,7 @@
         if (dayOfWeek === 6) dayCell.classList.add('sat');
         if (holidayName) dayCell.classList.add('holiday');
         if (dateStr === todayStr) dayCell.classList.add('today');
-
-        // 기간 선택 시 하이라이트 스타일
-        if (rangeStart && rangeEnd) {
-          if (dateStr === rangeStart || dateStr === rangeEnd) {
-            dayCell.classList.add('selected-day');
-          } else if (dateStr > rangeStart && dateStr < rangeEnd) {
-            dayCell.classList.add('in-range');
-          }
-        } else if (rangeStart && dateStr === rangeStart) {
-          dayCell.classList.add('selected-day');
-        }
+        if (dateStr === selectedDateStr) dayCell.classList.add('selected-day');
 
         dayCell.innerHTML = `<div class="day-number">${day}</div>`;
 
@@ -872,29 +923,31 @@
           dayCell.appendChild(dotsContainer);
         }
 
-        // 💡 날짜 선택 로직 (첫 클릭 = 시작일, 두번째 클릭 = 종료일 지정)
+        // 💡 [변경] 날짜 클릭 시 복잡한 기간 선택 없이 '새 일정 등록 모달' 오픈
         dayCell.addEventListener('click', () => {
-          if (!startDateSelection || (startDateSelection && endDateSelection && startDateSelection !== endDateSelection)) {
-            // 새 선택 시작
-            startDateSelection = dateStr;
-            endDateSelection = dateStr;
-          } else {
-            // 두 번째 날짜 선택으로 기간 완성
-            endDateSelection = dateStr;
-            if (startDateSelection > endDateSelection) {
-              [startDateSelection, endDateSelection] = [endDateSelection, startDateSelection];
-            }
-          }
+          selectedDateStr = dateStr;
 
-          updateFormDates(startDateSelection, endDateSelection);
-          renderCalendar();
+          // 모달 상단 날짜 텍스트 & 전달용 hidden input 설정
+          const [y, m, d] = dateStr.split('-');
+          addModalDateText.textContent = `📅 ${y}년 ${parseInt(m)}월 ${parseInt(d)}일`;
+          addSelectedDate.value = dateStr;
+          addTitle.value = '';
+
+          // 선택한 날짜 셀 표시 스타일 적용
+          document.querySelectorAll('.day-cell').forEach(el => el.classList.remove('selected-day'));
+          dayCell.classList.add('selected-day');
+
+          // 새 일정 등록 팝업 띄우기
+          addModal.style.display = 'flex';
+          renderWeeklyEvents(selectedDateStr);
         });
 
         calendarGrid.appendChild(dayCell);
       }
 
-      renderWeeklyEvents(startDateSelection || todayStr);
+      renderWeeklyEvents(selectedDateStr || todayStr);
     }
+
 
     // 사이드바 이벤트 리스트 렌더링 & 삭제
     function renderEventList() {
