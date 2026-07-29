@@ -649,6 +649,7 @@
       endDateSelection = todayStr;
       updateFormDates(todayStr, todayStr);
 
+         // 💡 onSnapshot 콜백 내부에 renderWeeklyEvents(currentWeeklyDate) 추가!
       onSnapshot(collection(db, "shared_events"), (snapshot) => {
         events = snapshot.docs.map(doc => {
           const data = doc.data();
@@ -661,7 +662,9 @@
         });
         renderCalendar();
         renderEventList();
+        renderWeeklyEvents(currentWeeklyDate); // <-- 이 줄을 추가해주세요!
       });
+
 
       // 월간 달력 내비게이션
       document.getElementById('prevBtn').addEventListener('click', () => {
@@ -683,27 +686,37 @@
         renderCalendar();
       });
 
-      // 💡 주간 일정 내비게이션 버튼 이벤트 추가
+      // 💡 주간 일정 네비게이션 버튼 및 active 클래스 처리
       const btnPrevWeek = document.getElementById('btnPrevWeek');
       const btnThisWeek = document.getElementById('btnThisWeek');
       const btnNextWeek = document.getElementById('btnNextWeek');
+
+      function setActiveBtn(targetBtn) {
+        [btnPrevWeek, btnThisWeek, btnNextWeek].forEach(btn => {
+          if (btn) btn.classList.remove('active');
+        });
+        if (targetBtn) targetBtn.classList.add('active');
+      }
 
       if (btnPrevWeek) {
         btnPrevWeek.addEventListener('click', () => {
           currentWeeklyDate.setDate(currentWeeklyDate.getDate() - 7);
           renderWeeklyEvents(currentWeeklyDate);
+          setActiveBtn(btnPrevWeek);
         });
       }
       if (btnThisWeek) {
         btnThisWeek.addEventListener('click', () => {
           currentWeeklyDate = new Date();
           renderWeeklyEvents(currentWeeklyDate);
+          setActiveBtn(btnThisWeek);
         });
       }
       if (btnNextWeek) {
         btnNextWeek.addEventListener('click', () => {
           currentWeeklyDate.setDate(currentWeeklyDate.getDate() + 7);
           renderWeeklyEvents(currentWeeklyDate);
+          setActiveBtn(btnNextWeek);
         });
       }
 
