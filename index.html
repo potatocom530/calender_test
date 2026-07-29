@@ -144,7 +144,23 @@
   flex-direction: column;
   overflow-y: auto;          /* 일정이 많아지면 셀 내부에서 위아래 스크롤 가능 */
   box-sizing: border-box;
+    overflow: hidden; /* 영역을 벗어나는 건 숨김 */
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
 
 /* 2. 날짜 숫자 폰트 크기 및 여백 미세 조정 */
 .day-number { 
@@ -167,13 +183,15 @@
     .event-dots { display: flex; flex-direction: column; gap: 3px; overflow: hidden; }
 
     .event-badge {
-      font-size: 0.7rem;
-      padding: 2px 4px;
-      border-radius: 4px;
-      color: white;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+  font-size: 0.6rem;         /* 모바일 전용 폰트 (약 9.5~10px) */
+  line-height: 1.1;
+  padding: 1px 3px;
+  margin-top: 1px;
+  border-radius: 3px;
+  white-space: nowrap;       /* 한 줄로 고정 */
+  overflow: hidden;
+  text-overflow: ellipsis;   /* 일정 제목이 길면 자동으로 ... 처리 */
+  font-weight: 500;
     }
 
     .sidebar h3 { font-size: 1.2rem; margin-bottom: 16px; }
