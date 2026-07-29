@@ -19,11 +19,11 @@
       --color-saturday: #2563eb;
       --color-sunday: #dc2626;
 
-      /* 🌸 파스텔 컬러 팔레트 */
-      --cat-work: #bae6fd;      /* 파스텔 하늘톤 (업무) */
-      --cat-personal: #fef08a;  /* 파스텔 노랑톤 (개인) */
-      --cat-important: #fecdd3; /* 파스텔 핑크톤 (중요) */
-      --cat-holiday: #fda4af;   /* 파스텔 로즈톤 (공휴일) */
+      /* 파스텔 컬러 팔레트 */
+      --cat-work: #bae6fd;      /* 파스텔 하늘 (업무) */
+      --cat-personal: #fef08a;  /* 파스텔 노랑 (개인) */
+      --cat-important: #fecdd3; /* 파스텔 핑크 (중요) */
+      --cat-holiday: #fda4af;   /* 파스텔 로즈 (공휴일) */
     }
 
     * {
@@ -54,7 +54,7 @@
       touch-action: manipulation;
     }
 
-    /* 비밀번호 인증 레이어 & 모달 공통 */
+    /* 모달 레이어 */
     .modal-overlay {
       position: fixed;
       top: 0; left: 0; width: 100vw; height: 100vh;
@@ -85,7 +85,7 @@
     .modal-box h2, .modal-box h3 { margin-bottom: 8px; font-size: 1.3rem; }
     .modal-box p { color: var(--text-muted); font-size: 0.85rem; margin-bottom: 16px; }
 
-    /* 메인 앱 레이아웃 (1컬럼 레이아웃으로 변경) */
+    /* 메인 앱 레이아웃 */
     .app-container {
       width: 100%;
       max-width: 800px;
@@ -227,7 +227,7 @@
       color: #334155;
     }
 
-    /* 2. 주간 이동 아이콘 버튼 스타일 */
+    /* 주간 이동 아이콘 버튼 스타일 */
     .weekly-nav-btns {
       display: flex;
       gap: 6px;
@@ -249,6 +249,13 @@
       transition: all 0.15s ease;
       color: var(--text-main);
     }
+
+    /* 동그라미 아이콘 크기 축소 조절 */
+    #btnThisWeek {
+      font-size: 0.6rem;
+      line-height: 1;
+    }
+
     .btn-nav-icon:hover { background: #f1f5f9; }
     .btn-nav-icon.active {
       background: var(--primary-color);
@@ -262,7 +269,7 @@
       gap: 10px;
     }
 
-    /* 주간 일정 카드 디자인 (메모 및 Line Clamp 반영) */
+    /* 주간 일정 카드 디자인 */
     .weekly-card {
       display: flex;
       flex-direction: column;
@@ -309,14 +316,13 @@
       margin-left: 8px;
     }
 
-    /* 4. 메모 Line Clamp (말줄임 처리) */
     .weekly-card .card-memo {
       font-size: 0.8rem;
       opacity: 0.85;
       margin-top: 2px;
       line-height: 1.35;
       display: -webkit-box;
-      -webkit-line-clamp: 2; /* 최대 2줄 표시 후 ... 처리 */
+      -webkit-line-clamp: 2;
       -webkit-box-orient: vertical;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -371,7 +377,6 @@
       cursor: pointer; font-size: 1rem; margin-top: 8px; width: 100%;
     }
 
-    /* 카테고리 파스텔 컬러 바인딩 */
     .bg-work { background-color: var(--cat-work) !important; color: #0c4a6e !important; }
     .bg-personal { background-color: var(--cat-personal) !important; color: #713f12 !important; }
     .bg-important { background-color: var(--cat-important) !important; color: #881337 !important; }
@@ -402,6 +407,11 @@
           <label for="editTitle">일정 제목</label>
           <input type="text" id="editTitle" required>
         </div>
+        <!-- 작성자 수정 입력란 추가 -->
+        <div class="form-group">
+          <label for="editAuthor">작성자</label>
+          <input type="text" id="editAuthor" placeholder="작성자 이름" required>
+        </div>
         <div class="form-group">
           <label>기간 선택</label>
           <div class="date-range-inputs">
@@ -418,7 +428,6 @@
             <option value="important">중요</option>
           </select>
         </div>
-        <!-- 4. 메모 입력란 추가 -->
         <div class="form-group">
           <label for="editMemo">메모 (세부 일정)</label>
           <textarea id="editMemo" placeholder="상세 내용이나 참고사항을 입력하세요."></textarea>
@@ -456,7 +465,6 @@
             <option value="important">중요</option>
           </select>
         </div>
-        <!-- 4. 메모 입력란 추가 -->
         <div class="form-group">
           <label for="addMemo">메모 (세부 일정)</label>
           <textarea id="addMemo" placeholder="상세 내용이나 참고사항을 입력하세요."></textarea>
@@ -468,7 +476,6 @@
   </div>
 
   <div class="app-container">
-    <!-- 메인 달력 및 주간 일정 카드 -->
     <div class="card">
       <div class="calendar-header">
         <h2 id="monthYear"></h2>
@@ -485,18 +492,16 @@
 
       <div class="grid-days" id="calendarGrid"></div>
 
-      <!-- 주간 상세 일정 영역 (3. 하단 영역 제거 및 깔끔하게 재구성) -->
+      <!-- 주간 상세 일정 영역 -->
       <div class="weekly-section">
         <div class="weekly-header">
           <h3 id="weeklyTitle">📅 주간 일정</h3>
-          <!-- 2. 이전주 / 이번주 / 다음주 아이콘화 (< ● >) -->
           <div class="weekly-nav-btns">
             <button type="button" id="btnPrevWeek" class="btn-nav-icon" title="이전주">&lt;</button>
             <button type="button" id="btnThisWeek" class="btn-nav-icon active" title="이번주">●</button>
             <button type="button" id="btnNextWeek" class="btn-nav-icon" title="다음주">&gt;</button>
           </div>
         </div>
-        <!-- 1. 주간 일정 리스트 컨테이너 -->
         <div class="weekly-event-list" id="weeklyEventList"></div>
       </div>
     </div>
@@ -541,6 +546,7 @@
     const editForm = document.getElementById('editForm');
     const editEventId = document.getElementById('editEventId');
     const editTitle = document.getElementById('editTitle');
+    const editAuthor = document.getElementById('editAuthor');
     const editStartDate = document.getElementById('editStartDate');
     const editEndDate = document.getElementById('editEndDate');
     const editCategory = document.getElementById('editCategory');
@@ -572,7 +578,7 @@
     });
 
     function initApp() {
-      // 1. Firebase 실시간 수신 설정 및 리스트 바인딩
+      // Firebase 데이터 수신
       onSnapshot(collection(db, "shared_events"), (snapshot) => {
         events = snapshot.docs.map(doc => {
           const data = doc.data();
@@ -601,10 +607,11 @@
         currentDate = new Date();
         selectedDateStr = formatDateStr(currentDate);
         currentWeeklyDate = new Date();
+        syncMonthWithWeek(currentWeeklyDate);
         renderCalendar();
       });
 
-      // 2. 주간 일정 아이콘 네비게이션
+      // 주간 일정 아이콘 내비게이션 + 동기화
       const btnPrevWeek = document.getElementById('btnPrevWeek');
       const btnThisWeek = document.getElementById('btnThisWeek');
       const btnNextWeek = document.getElementById('btnNextWeek');
@@ -619,21 +626,24 @@
       if (btnPrevWeek) {
         btnPrevWeek.addEventListener('click', () => {
           currentWeeklyDate.setDate(currentWeeklyDate.getDate() - 7);
-          renderWeeklyEvents(currentWeeklyDate);
+          syncMonthWithWeek(currentWeeklyDate);
+          renderCalendar();
           setActiveBtn(btnPrevWeek);
         });
       }
       if (btnThisWeek) {
         btnThisWeek.addEventListener('click', () => {
           currentWeeklyDate = new Date();
-          renderWeeklyEvents(currentWeeklyDate);
+          syncMonthWithWeek(currentWeeklyDate);
+          renderCalendar();
           setActiveBtn(btnThisWeek);
         });
       }
       if (btnNextWeek) {
         btnNextWeek.addEventListener('click', () => {
           currentWeeklyDate.setDate(currentWeeklyDate.getDate() + 7);
-          renderWeeklyEvents(currentWeeklyDate);
+          syncMonthWithWeek(currentWeeklyDate);
+          renderCalendar();
           setActiveBtn(btnNextWeek);
         });
       }
@@ -645,7 +655,7 @@
         });
       }
 
-      // 새 일정 등록 모달 제출
+      // 새 일정 등록
       if (addEventForm) {
         addEventForm.addEventListener('submit', async (e) => {
           e.preventDefault();
@@ -699,7 +709,7 @@
         });
       }
 
-      // 수정 폼 제출
+      // 수정 폼 제출 (작성자 수정 포함)
       if (editForm) {
         editForm.addEventListener('submit', async (e) => {
           e.preventDefault();
@@ -712,6 +722,7 @@
           try {
             await updateDoc(doc(db, "shared_events", id), {
               title: editTitle.value.trim(),
+              author: editAuthor.value.trim() || '익명',
               startDate: sDate,
               endDate: eDate,
               date: sDate,
@@ -726,9 +737,20 @@
       }
     }
 
+    // 주간 날짜에 맞춰 월간 달력의 월을 동기화하는 함수 (목요일 기준)
+    function syncMonthWithWeek(targetWeekDate) {
+      const { sunday } = getWeekRange(targetWeekDate);
+      const thursday = new Date(sunday);
+      thursday.setDate(sunday.getDate() + 4);
+
+      currentDate.setFullYear(thursday.getFullYear());
+      currentDate.setMonth(thursday.getMonth());
+    }
+
     function openEditModal(eventObj) {
       editEventId.value = eventObj.id;
       editTitle.value = eventObj.title;
+      editAuthor.value = eventObj.author || '익명';
       editStartDate.value = eventObj.startDate;
       editEndDate.value = eventObj.endDate;
       editCategory.value = eventObj.category || 'work';
@@ -765,7 +787,7 @@
       return fixedHolidays[dateStr.slice(5)] || null;
     }
 
-    // 1 & 4. 주간 일정 및 카드 내 메모(Line Clamp) 렌더링
+    // 주간 일정 렌더링
     function renderWeeklyEvents(targetDateInput) {
       const targetDate = targetDateInput ? new Date(targetDateInput) : new Date();
       const { sunday, saturday } = getWeekRange(targetDate);
@@ -810,7 +832,6 @@
           dateDisplay = `${parseInt(sm)}.${parseInt(sd)}~${parseInt(em)}.${parseInt(ed)}`;
         }
 
-        // 카드 상단 영역 (날짜, 제목, 작성자)
         let cardContent = `
           <div class="weekly-card-header">
             <span class="card-date">${dateDisplay}</span>
@@ -819,7 +840,6 @@
           </div>
         `;
 
-        // 4. 메모(세부 일정)가 있는 경우 Line Clamp 클래스를 적용하여 표기
         if (e.memo && e.memo.trim() !== "") {
           cardContent += `<div class="card-memo">${escapeHtml(e.memo)}</div>`;
         }
@@ -886,7 +906,7 @@
           dayCell.appendChild(dotsContainer);
         }
 
-        // 날짜 클릭 시 모달 열기 & 해당 주간 일정으로 포커스
+        // 날짜 클릭 시 모달 열기 & 주간 및 월간 포커스 동기화
         dayCell.addEventListener('click', () => {
           selectedDateStr = dateStr;
           currentWeeklyDate = new Date(dateStr);
@@ -902,7 +922,9 @@
           dayCell.classList.add('selected-day');
 
           if (addModal) addModal.style.display = 'flex';
-          renderWeeklyEvents(currentWeeklyDate);
+          
+          syncMonthWithWeek(currentWeeklyDate);
+          renderCalendar();
         });
 
         calendarGrid.appendChild(dayCell);
