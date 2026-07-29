@@ -129,30 +129,103 @@
 
     .grid-days { gap: 6px; }
 
-/* 1. 날짜 칸 정사각형 고정 및 스크롤 설정 */
+
+
+
+
+
+/* --- 달력 셀 내부 도트 표시 --- */
 .day-cell {
-  aspect-ratio: 1 / 1;       /* 높이고정 -> 무조건 완벽한 1:1 정사각형 */
-  min-height: unset;         /* 기존 min-height: 90px 해제 */
-  border: 1px solid var(--border-color);
-  border-radius: 10px;
-  padding: 4px;              /* 모바일용 패딩 축소 (6px -> 4px) */
-  text-align: left;
-  cursor: pointer;
-  background: #fff;
-  transition: border-color 0.2s, background 0.2s;
+  aspect-ratio: 1 / 1; /* 1:1 정사각형 고정 */
+  min-height: unset;
+  padding: 4px;
+  position: relative;
   display: flex;
   flex-direction: column;
-  overflow-y: auto;          /* 일정이 많아지면 셀 내부에서 위아래 스크롤 가능 */
+  align-items: center;
+  justify-content: flex-start;
   box-sizing: border-box;
-    overflow: hidden; /* 영역을 벗어나는 건 숨김 */
 }
 
+/* 선택된 날짜 강조 표시 */
+.day-cell.selected-day {
+  border: 2px solid var(--primary-color, #6366f1) !important;
+  background-color: #f5f3ff !important;
+}
 
+/* 달력 칸 안의 파스텔 도트 */
+.dots-container {
+  display: flex;
+  gap: 3px;
+  margin-top: 4px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
 
+.event-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
 
+/* --- 하단 주간 일정 상세 영역 --- */
+.weekly-section {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px dashed var(--border-color, #e2e8f0);
+}
 
+.weekly-header h3 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #334155;
+  margin-bottom: 12px;
+}
 
+.weekly-event-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
 
+/* 주간 일정 파스텔 카드 */
+.weekly-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.weekly-card .card-date {
+  font-weight: 700;
+  font-size: 0.8rem;
+  opacity: 0.85;
+  margin-right: 10px;
+  min-width: 50px;
+}
+
+.weekly-card .card-title {
+  font-weight: 600;
+  flex-grow: 1;
+}
+
+.weekly-card .card-author {
+  font-size: 0.75rem;
+  opacity: 0.75;
+  background: rgba(255,255,255,0.5);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.no-events {
+  text-align: center;
+  color: #94a3b8;
+  font-size: 0.85rem;
+  padding: 16px 0;
+}
 
 
 
@@ -330,6 +403,18 @@ input[type="password"] {
       </div>
 
       <div class="grid-days" id="calendarGrid"></div>
+
+      <!-- 💡 [신규 추가] 주간 상세 일정 영역 -->
+    <div class="weekly-section">
+      <div class="weekly-header">
+        <h3 id="weeklyTitle">📅 이번 주 일정</h3>
+      </div>
+      <div id="weeklyEventList" class="weekly-event-list">
+        <!-- 이번 주 일정이 큼직한 파스텔 카드로 들어갑니다 -->
+      </div>
+    </div>
+  </div>
+    
     </div>
 
     <div class="sidebar">
@@ -608,6 +693,141 @@ const firebaseConfig = {
       div.innerText = text;
       return div.innerHTML;
     }
+
+
+// 현재 선택된 날짜 (기본값: 오늘)
+let selectedDate = new Date();
+
+// 1. 특정 날짜가 속한 주(일요일~토요일) 범위 구하기
+function getWeekRange(date) {
+  const current = new Date(date);
+  const day = current.getDay(); // 0(일) ~ 6(토)
+  
+  const sunday = new Date(current);
+  sunday.setDate(current.getDate() - day);
+  
+  const saturday = new Date(sunday);
+  saturday.setDate(sunday.getDate() + 6);
+  
+  return { sunday, saturday };
+}
+
+// YYYY-MM-DD 변환 함수
+function formatDateStr(d) {
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+// 2. 하단 주간 일정 목록 렌더링 함수
+function renderWeeklyEvents(allEvents, targetDate) {
+  const { sunday, saturday } = getWeekRange(targetDate);
+  const startStr = formatDateStr(sunday);
+  const endStr = formatDateStr(saturday);
+  
+  // 타이틀 변경 (예: 📅 7.26(일) ~ 8.01(토) 일정)
+  const titleEl = document.getElementById('weeklyTitle');
+  if (titleEl) {
+    titleEl.textContent = `📅 ${sunday.getMonth()+1}.${sunday.getDate()} ~ ${saturday.getMonth()+1}.${saturday.getDate()} 주간 일정`;
+  }
+
+  // 주간 범위 안의 일정 필터링
+  const weeklyEvents = allEvents
+    .filter(e => e.date >= startStr && e.date <= endStr)
+    .sort((a, b) => a.date.localeCompare(b.date));
+
+  const listEl = document.getElementById('weeklyEventList');
+  if (!listEl) return;
+  listEl.innerHTML = '';
+
+  if (weeklyEvents.length === 0) {
+    listEl.innerHTML = `<div class="no-events">이번 주에 등록된 일정이 없습니다.</div>`;
+    return;
+  }
+
+  // 파스텔 카드 생성
+  weeklyEvents.forEach(e => {
+    const card = document.createElement('div');
+    card.className = 'weekly-card';
+    card.style.backgroundColor = e.color || '#e0f2fe'; // 지정한 파스텔 색상 적용
+
+    const [y, m, d] = e.date.split('-');
+    const eventDateObj = new Date(y, m - 1, d);
+    const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
+    const dayName = dayNames[eventDateObj.getDay()];
+
+    card.innerHTML = `
+      <span class="card-date">${parseInt(m)}.${parseInt(d)}(${dayName})</span>
+      <span class="card-title">${e.title}</span>
+      ${e.author ? `<span class="card-author">${e.author}</span>` : ''}
+    `;
+    listEl.appendChild(card);
+  });
+}
+
+// 3. 달력 렌더링 로직 수정 (기존 달력 그리는 함수 내부)
+// (일정 데이터(allEvents), 연도(year), 월(month)을 받아 그릴 때)
+function renderCalendar(allEvents, currentYear, currentMonth) {
+  const gridDays = document.getElementById('calendarGrid');
+  gridDays.innerHTML = '';
+
+  // ... [기존 시작 요일/마지막 날짜 계산 로직] ...
+
+  // 날짜 Cell 생성 반복문 내부 예시
+  // for (let dayNum = 1; dayNum <= lastDate; dayNum++) {
+    const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
+    const dayEvents = allEvents.filter(e => e.date === dateStr);
+
+    const dayCell = document.createElement('div');
+    dayCell.className = 'day-cell';
+    
+    // 현재 선택한 날짜에 강조 효과
+    if (dateStr === formatDateStr(selectedDate)) {
+      dayCell.classList.add('selected-day');
+    }
+
+    // 날짜 숫자
+    const numSpan = document.createElement('span');
+    numSpan.className = 'day-number';
+    numSpan.textContent = dayNum;
+    dayCell.appendChild(numSpan);
+
+    // 💡 [도트 표시] 일정이 있으면 파스텔 도트(●) 생성
+    if (dayEvents.length > 0) {
+      const dotsContainer = document.createElement('div');
+      dotsContainer.className = 'dots-container';
+      
+      dayEvents.slice(0, 3).forEach(e => {
+        const dot = document.createElement('div');
+        dot.className = 'event-dot';
+        dot.style.backgroundColor = e.color || '#38bdf8'; // 선택한 파스텔 색상
+        dotsContainer.appendChild(dot);
+      });
+      
+      dayCell.appendChild(dotsContainer);
+    }
+
+    // 💡 [클릭 이벤트] 날짜 터치 시 주간 상세 업데이트
+    dayCell.addEventListener('click', () => {
+      selectedDate = new Date(currentYear, currentMonth, dayNum);
+      
+      // 선택한 날짜 테두리 강조
+      document.querySelectorAll('.day-cell').forEach(el => el.classList.remove('selected-day'));
+      dayCell.classList.add('selected-day');
+      
+      // 하단 주간 상세 목록 업데이트
+      renderWeeklyEvents(allEvents, selectedDate);
+    });
+
+    gridDays.appendChild(dayCell);
+  // }
+
+  // 달력이 다 그려지면 하단 주간 목록도 한 번 실행
+  renderWeeklyEvents(allEvents, selectedDate);
+}
+
+    
   </script>
 </body>
 </html>
