@@ -522,7 +522,7 @@
     </div>
   </div>
 
-  <!-- Firebase SDK 모듈 로드 -->
+    <!-- Firebase SDK 모듈 로드 -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getFirestore, collection, addDoc, deleteDoc, doc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
@@ -548,6 +548,7 @@
     };
 
     let currentDate = new Date();
+    let selectedDateStr = formatDateStr(new Date()); // 💡 누락되었던 변수 추가
     let startDateSelection = null;
     let endDateSelection = null;
     let events = [];
@@ -572,7 +573,7 @@
     const editCategory = document.getElementById('editCategory');
     const btnCancelEdit = document.getElementById('btnCancelEdit');
 
-    // 💡 [추가] 등록 모달 엘리먼트 참조 (editModal 선언부 근처)
+    // 등록 모달 엘리먼트 참조
     const addModal = document.getElementById('addModal');
     const addEventForm = document.getElementById('addEventForm');
     const addModalDateText = document.getElementById('addModalDateText');
@@ -580,10 +581,6 @@
     const addTitle = document.getElementById('addTitle');
     const addCategory = document.getElementById('addCategory');
     const btnCancelAdd = document.getElementById('btnCancelAdd');
-
-
-
-
 
     // 인증 처리
     document.getElementById('btnAuth').addEventListener('click', () => {
@@ -611,7 +608,6 @@
           return {
             id: doc.id,
             ...data,
-            // 하위 호환성 (단일 date만 있던 기존 데이터 대치)
             startDate: data.startDate || data.date,
             endDate: data.endDate || data.date
           };
@@ -631,46 +627,47 @@
       document.getElementById('todayBtn').addEventListener('click', () => {
         currentDate = new Date();
         const today = formatDateStr(currentDate);
+        selectedDateStr = today;
         startDateSelection = today;
         endDateSelection = today;
         updateFormDates(today, today);
         renderCalendar();
       });
 
-      // 등록 폼 제출
-      eventForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        let sDate = eventStartDateInput.value;
-        let eDate = eventEndDateInput.value;
+      // 우측 사이드바 등록 폼 제출
+      if (eventForm) {
+        eventForm.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          let sDate = eventStartDateInput.value;
+          let eDate = eventEndDateInput.value;
 
-        if (sDate > eDate) {
-          [sDate, eDate] = [eDate, sDate]; // 날짜가 반대로 되어있으면 정렬
-        }
+          if (sDate > eDate) {
+            [sDate, eDate] = [eDate, sDate];
+          }
 
-        try {
-          await addDoc(collection(db, "shared_events"), {
-            title: eventTitleInput.value,
-            startDate: sDate,
-            endDate: eDate,
-            date: sDate, // 하위 호환
-            category: eventCategorySelect.value,
-            author: currentUser,
-            createdAt: new Date()
-          });
-          eventTitleInput.value = '';
-        } catch (err) {
-          alert("일정 추가 중 오류가 발생했습니다: " + err.message);
-        }
-      });
-      
-    
+          try {
+            await addDoc(collection(db, "shared_events"), {
+              title: eventTitleInput.value,
+              startDate: sDate,
+              endDate: eDate,
+              date: sDate,
+              category: eventCategorySelect.value,
+              author: currentUser,
+              createdAt: new Date()
+            });
+            eventTitleInput.value = '';
+          } catch (err) {
+            alert("일정 추가 중 오류가 발생했습니다: " + err.message);
+          }
+        });
+      }
 
-      // 💡 [추가] 새 일정 등록 모달 취소
+      // 새 일정 등록 모달 취소
       btnCancelAdd.addEventListener('click', () => {
         addModal.style.display = 'none';
       });
 
-      // 💡 [추가] 새 일정 등록 폼 제출
+      // 새 일정 등록 모달 폼 제출
       addEventForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const targetDate = addSelectedDate.value;
@@ -691,31 +688,34 @@
           alert("일정 추가 오류: " + err.message);
         }
       });
-      
-
 
       // 수동 날짜 입력 변경 시 달력에 반영
-      eventStartDateInput.addEventListener('change', () => {
-        startDateSelection = eventStartDateInput.value;
-        if (!eventEndDateInput.value || eventEndDateInput.value < startDateSelection) {
-          eventEndDateInput.value = startDateSelection;
-          endDateSelection = startDateSelection;
-        }
-        renderCalendar();
-      });
-      eventEndDateInput.addEventListener('change', () => {
-        endDateSelection = eventEndDateInput.value;
-        if (endDateSelection < startDateSelection) {
-          startDateSelection = endDateSelection;
-          eventStartDateInput.value = startDateSelection;
-        }
-        renderCalendar();
-      });
+      if (eventStartDateInput) {
+        eventStartDateInput.addEventListener('change', () => {
+          startDateSelection = eventStartDateInput.value;
+          if (!eventEndDateInput.value || eventEndDateInput.value < startDateSelection) {
+            eventEndDateInput.value = startDateSelection;
+            endDateSelection = startDateSelection;
+          }
+          renderCalendar();
+        });
+      }
+      if (eventEndDateInput) {
+        eventEndDateInput.addEventListener('change', () => {
+          endDateSelection = eventEndDateInput.value;
+          if (endDateSelection < startDateSelection) {
+            startDateSelection = endDateSelection;
+            eventStartDateInput.value = startDateSelection;
+          }
+          renderCalendar();
+        });
+      }
 
       // 수정 취소 버튼
       btnCancelEdit.addEventListener('click', () => {
         editModal.style.display = 'none';
       });
+
       // 수정 모달 내 삭제 버튼 이벤트 처리
       const btnDeleteModal = document.getElementById('btnDeleteModal');
       if (btnDeleteModal) {
@@ -812,7 +812,6 @@
         titleEl.textContent = `📅 ${sunday.getMonth() + 1}.${sunday.getDate()} ~ ${saturday.getMonth() + 1}.${saturday.getDate()} 주간 일정`;
       }
 
-      // 주간 범위 내에 일부라도 걸치는 일정들 검색
       const weeklyEvents = events.filter(e => {
         return !(e.endDate < startStr || e.startDate > endStr);
       }).sort((a, b) => a.startDate.localeCompare(b.startDate));
@@ -838,7 +837,6 @@
           card.style.backgroundColor = '#e0f2fe';
         }
 
-        // 날짜 범위 표시 계산
         let dateDisplay = '';
         const [sy, sm, sd] = e.startDate.split('-');
         const [ey, em, ed] = e.endDate.split('-');
@@ -855,14 +853,12 @@
           ${e.author ? `<span class="card-author">${escapeHtml(e.author)}</span>` : ''}
         `;
 
-        // 💡 주간 일정 카드 클릭 시 바로 수정 모달 오픈
         card.addEventListener('click', () => openEditModal(e));
-
         listEl.appendChild(card);
       });
     }
 
-       // 월간 달력 렌더링
+    // 월간 달력 렌더링
     function renderCalendar() {
       const year = currentDate.getFullYear();
       const month = currentDate.getMonth();
@@ -906,7 +902,6 @@
           dotsContainer.appendChild(holidayDot);
         }
 
-        // 해당 날짜에 포함되는 이벤트 가져오기 (시작일~종료일 범위 체크)
         const dayEvents = events.filter(e => dateStr >= e.startDate && dateStr <= e.endDate);
         dayEvents.slice(0, 3).forEach(e => {
           const dot = document.createElement('div');
@@ -923,21 +918,18 @@
           dayCell.appendChild(dotsContainer);
         }
 
-        // 💡 [변경] 날짜 클릭 시 복잡한 기간 선택 없이 '새 일정 등록 모달' 오픈
+        // 날짜 클릭 시 새 일정 등록 모달 오픈
         dayCell.addEventListener('click', () => {
           selectedDateStr = dateStr;
 
-          // 모달 상단 날짜 텍스트 & 전달용 hidden input 설정
           const [y, m, d] = dateStr.split('-');
           addModalDateText.textContent = `📅 ${y}년 ${parseInt(m)}월 ${parseInt(d)}일`;
           addSelectedDate.value = dateStr;
           addTitle.value = '';
 
-          // 선택한 날짜 셀 표시 스타일 적용
           document.querySelectorAll('.day-cell').forEach(el => el.classList.remove('selected-day'));
           dayCell.classList.add('selected-day');
 
-          // 새 일정 등록 팝업 띄우기
           addModal.style.display = 'flex';
           renderWeeklyEvents(selectedDateStr);
         });
@@ -947,7 +939,6 @@
 
       renderWeeklyEvents(selectedDateStr || todayStr);
     }
-
 
     // 사이드바 이벤트 리스트 렌더링 & 삭제
     function renderEventList() {
@@ -995,5 +986,6 @@
       }
     }
   </script>
+
 </body>
 </html>
