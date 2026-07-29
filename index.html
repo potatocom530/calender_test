@@ -39,7 +39,7 @@
             gap: 20px;
         }
 
-        /* 1. 로그인 / 프로필 선택 영역 */
+        /* 1. 로그인 / 작성자 선택 영역 */
         .login-card {
             background: var(--card-bg);
             padding: 20px;
@@ -78,17 +78,17 @@
             border-color: var(--primary-color);
         }
 
-        /* 프로필 이모지 선택 (2개 축소) */
+        /* 이모지 프로필 선택 그리드 */
         .author-selector {
-            display: flex;
-            gap: 12px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 8px;
         }
 
         .author-option {
-            flex: 1;
             border: 2px solid var(--border-color);
-            border-radius: 10px;
-            padding: 12px;
+            border-radius: 8px;
+            padding: 8px;
             text-align: center;
             cursor: pointer;
             transition: all 0.2s ease;
@@ -103,11 +103,18 @@
         .author-option.selected {
             border-color: var(--primary-color);
             background-color: #eff6ff;
+            font-weight: bold;
         }
 
         .author-emoji {
-            font-size: 28px;
+            font-size: 22px;
             display: block;
+            margin-bottom: 2px;
+        }
+
+        .author-name {
+            font-size: 12px;
+            color: var(--text-main);
         }
 
         .btn-primary {
@@ -126,7 +133,7 @@
             background-color: var(--primary-hover);
         }
 
-        /* 2. 간소화된 공휴일 카드 */
+        /* 2. 간소화된 공휴일 카드 (이모지, 설명 제거 및 축소) */
         .section-title {
             font-size: 15px;
             font-weight: 700;
@@ -182,10 +189,11 @@
         .user-profile-tag {
             display: inline-flex;
             align-items: center;
-            font-size: 18px;
+            gap: 4px;
             background: #f1f5f9;
-            padding: 2px 10px;
+            padding: 3px 8px;
             border-radius: 12px;
+            font-weight: 600;
         }
 
         .comment-item {
@@ -208,7 +216,8 @@
         }
 
         .comment-author {
-            font-size: 15px;
+            font-weight: 600;
+            font-size: 12px;
         }
 
         .comment-date {
@@ -222,7 +231,7 @@
             color: var(--text-main);
         }
 
-        /* 소형 삭제 버튼 */
+        /* 코멘트 삭제 버튼 (소형) */
         .btn-delete-small {
             background: transparent;
             border: none;
@@ -259,7 +268,7 @@
 
 <div class="container">
 
-    <!-- 프로필 선택 영역 (이름 없이 이모지 2개만 선택 가능) -->
+    <!-- 접속 및 프로필 선택 (이름 직접 작성X -> 이모지 프로필 선택O) -->
     <div class="login-card" id="loginCard">
         <h2>접속 및 프로필 선택</h2>
         <div class="form-group">
@@ -268,13 +277,23 @@
         </div>
 
         <div class="form-group">
-            <label>프로필 선택</label>
+            <label>작성자 선택</label>
             <div class="author-selector" id="authorSelector">
-                <div class="author-option selected" data-emoji="🎧">
-                    <span class="author-emoji">🎧</span>
+                <div class="author-option selected" data-author="김철수" data-emoji="👨‍💻">
+                    <span class="author-emoji">👨‍💻</span>
+                    <span class="author-name">김철수</span>
                 </div>
-                <div class="author-option" data-emoji="💻">
-                    <span class="author-emoji">💻</span>
+                <div class="author-option" data-author="이영희" data-emoji="👩‍🔬">
+                    <span class="author-emoji">👩‍🔬</span>
+                    <span class="author-name">이영희</span>
+                </div>
+                <div class="author-option" data-author="박민수" data-emoji="🎨">
+                    <span class="author-emoji">🎨</span>
+                    <span class="author-name">박민수</span>
+                </div>
+                <div class="author-option" data-author="정지원" data-emoji="🚀">
+                    <span class="author-emoji">🚀</span>
+                    <span class="author-name">정지원</span>
                 </div>
             </div>
         </div>
@@ -282,7 +301,7 @@
         <button class="btn-primary" onclick="handleLogin()">접속하기</button>
     </div>
 
-    <!-- 간소화된 공휴일 카드 -->
+    <!-- 공휴일 카드 (공휴일명 + 날짜만 소형 표시) -->
     <div>
         <div class="section-title">주요 공휴일</div>
         <div class="holiday-list">
@@ -333,12 +352,12 @@
         </div>
     </div>
 
-    <!-- 코멘트 대시보드 -->
+    <!-- 코멘트 대시보드 (작성자 수정 기능 완전 제거됨) -->
     <div class="dashboard-content" id="dashboardContent">
         <div class="user-info-bar">
             <div>
                 현재 프로필: 
-                <span class="user-profile-tag" id="currentProfileTag">🎧</span>
+                <span class="user-profile-tag" id="currentProfileTag">👨‍💻 김철수</span>
             </div>
         </div>
 
@@ -348,10 +367,10 @@
             <div class="comment-item">
                 <div>
                     <div class="comment-header">
-                        <span class="comment-author">🎧</span>
+                        <span class="comment-author">👨‍💻 김철수</span>
                         <span class="comment-date">10:15 AM</span>
                     </div>
-                    <div class="comment-text">공휴일 카드가 간소화되었습니다.</div>
+                    <div class="comment-text">공휴일 카드가 날짜와 명칭만 표기되도록 간소화되었습니다.</div>
                 </div>
                 <button class="btn-delete-small" onclick="deleteComment(this)">삭제</button>
             </div>
@@ -366,20 +385,22 @@
 </div>
 
 <script>
-    let selectedEmoji = "🎧";
+    let selectedAuthor = "김철수";
+    let selectedEmoji = "👨‍💻";
 
-    // 프로필 이모지 선택 이벤트
+    // 작성자 이모지 프로필 선택
     document.querySelectorAll('.author-option').forEach(option => {
         option.addEventListener('click', function() {
             document.querySelectorAll('.author-option').forEach(opt => opt.classList.remove('selected'));
             this.classList.add('selected');
+            selectedAuthor = this.getAttribute('data-author');
             selectedEmoji = this.getAttribute('data-emoji');
         });
     });
 
     function handleLogin() {
-        document.getElementById('currentProfileTag').textContent = selectedEmoji;
-        alert(`${selectedEmoji} 프로필로 설정되었습니다.`);
+        document.getElementById('currentProfileTag').textContent = `${selectedEmoji} ${selectedAuthor}`;
+        alert(`${selectedEmoji} ${selectedAuthor} 프로필로 설정되었습니다.`);
     }
 
     function addComment() {
@@ -396,7 +417,7 @@
         newItem.innerHTML = `
             <div>
                 <div class="comment-header">
-                    <span class="comment-author">${selectedEmoji}</span>
+                    <span class="comment-author">${selectedEmoji} ${selectedAuthor}</span>
                     <span class="comment-date">${timeStr}</span>
                 </div>
                 <div class="comment-text">${text}</div>
