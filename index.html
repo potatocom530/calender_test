@@ -561,7 +561,7 @@
           </div>
         </div>
         <div class="form-group">
-          <label>일정 색상</label>
+          <label>일정 색상 (모던 뉴트럴)</label>
           <div class="color-palette" id="editColorPalette">
             <div class="color-chip" data-color="#d1e0d7" style="background-color: #d1e0d7;" title="세이지"></div>
             <div class="color-chip" data-color="#f3d8c7" style="background-color: #f3d8c7;" title="피치"></div>
@@ -572,13 +572,13 @@
           </div>
         </div>
         <div class="form-group">
-          <label for="editMemo">메모</label>
+          <label for="editMemo">메모 (세부 일정)</label>
           <textarea id="editMemo" placeholder="상세 내용이나 참고사항을 입력하세요."></textarea>
         </div>
 
         <!-- 💬 코멘트(댓글) 영역 -->
         <div class="comments-section">
-          <h4>💬 코멘트</h4>
+          <h4>💬 일정 코멘트</h4>
           <div class="comments-list" id="commentsList">
             <!-- 댓글 항목들이 여기에 생성됨 -->
           </div>
@@ -614,7 +614,7 @@
           </div>
         </div>
         <div class="form-group">
-          <label>일정 색상</label>
+          <label>일정 색상 (모던 뉴트럴)</label>
           <div class="color-palette" id="addColorPalette">
             <div class="color-chip selected" data-color="#d1e0d7" style="background-color: #d1e0d7;" title="세이지"></div>
             <div class="color-chip" data-color="#f3d8c7" style="background-color: #f3d8c7;" title="피치"></div>
@@ -625,7 +625,7 @@
           </div>
         </div>
         <div class="form-group">
-          <label for="addMemo">메모</label>
+          <label for="addMemo">메모 (세부 일정)</label>
           <textarea id="addMemo" placeholder="상세 내용이나 참고사항을 입력하세요."></textarea>
         </div>
         <button type="submit" class="btn-submit">일정 공유하기</button>
@@ -1096,7 +1096,7 @@
         if (hName) {
           weeklyHolidays.push({
             id: 'holiday_' + curStr,
-            title: `${hName}`,
+            title: `🔴 ${hName}`,
             startDate: curStr,
             endDate: curStr,
             isHolidayItem: true
@@ -1140,10 +1140,12 @@
           dateDisplay = `${parseInt(sm)}.${parseInt(sd)}~${parseInt(em)}.${parseInt(ed)}`;
         }
 
+        const commentCount = e.comments ? e.comments.length : 0;
+
         let cardContent = `
           <div class="weekly-card-header">
             <span class="card-date">${dateDisplay}</span>
-            <span class="card-title">${escapeHtml(e.title)}</span>
+            <span class="card-title">${escapeHtml(e.title)} ${(!e.isHolidayItem && commentCount > 0) ? `<small style="font-weight:normal; opacity:0.8;">💬 ${commentCount}</small>` : ''}</span>
             ${(!e.isHolidayItem && e.author) ? `<span class="card-author">${escapeHtml(e.author)}</span>` : ''}
           </div>
         `;
