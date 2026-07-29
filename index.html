@@ -435,16 +435,23 @@
       </form>
     </div>
   </div>
-  <!-- 💡 [신규] 새 일정 등록 모달 -->
+    <!-- 💡 [수정] 새 일정 등록 모달 (기간 선택 가능) -->
   <div id="addModal" class="modal-overlay" style="display: none;">
     <div class="modal-box">
       <h3>➕ 새 일정 등록</h3>
-      <p id="addModalDateText" style="font-weight: 600; color: var(--primary-color); margin-bottom: 12px;"></p>
+      <p style="margin-bottom: 12px; color: var(--text-muted); font-size: 0.85rem;">일정 내용과 기간을 입력하세요.</p>
       <form id="addEventForm">
-        <input type="hidden" id="addSelectedDate">
         <div class="form-group">
           <label for="addTitle">일정 제목</label>
           <input type="text" id="addTitle" placeholder="예: 회의 또는 휴가" required>
+        </div>
+        <div class="form-group">
+          <label>기간 선택</label>
+          <div class="date-range-inputs">
+            <input type="date" id="addStartDate" required>
+            <span>~</span>
+            <input type="date" id="addEndDate" required>
+          </div>
         </div>
         <div class="form-group">
           <label for="addCategory">카테고리</label>
@@ -459,6 +466,7 @@
       </form>
     </div>
   </div>
+
 
 
   <div class="app-container">
@@ -522,7 +530,7 @@
     </div>
   </div>
 
-    <!-- Firebase SDK 모듈 로드 -->
+      <!-- Firebase SDK 모듈 로드 -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getFirestore, collection, addDoc, deleteDoc, doc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
@@ -548,7 +556,7 @@
     };
 
     let currentDate = new Date();
-    let selectedDateStr = formatDateStr(new Date()); // 💡 누락되었던 변수 추가
+    let selectedDateStr = formatDateStr(new Date());
     let startDateSelection = null;
     let endDateSelection = null;
     let events = [];
@@ -573,11 +581,11 @@
     const editCategory = document.getElementById('editCategory');
     const btnCancelEdit = document.getElementById('btnCancelEdit');
 
-    // 등록 모달 엘리먼트 참조
+    // 등록 모달 요소 (기간 선택 추가)
     const addModal = document.getElementById('addModal');
     const addEventForm = document.getElementById('addEventForm');
-    const addModalDateText = document.getElementById('addModalDateText');
-    const addSelectedDate = document.getElementById('addSelectedDate');
+    const addStartDate = document.getElementById('addStartDate');
+    const addEndDate = document.getElementById('addEndDate');
     const addTitle = document.getElementById('addTitle');
     const addCategory = document.getElementById('addCategory');
     const btnCancelAdd = document.getElementById('btnCancelAdd');
@@ -663,31 +671,40 @@
       }
 
       // 새 일정 등록 모달 취소
-      btnCancelAdd.addEventListener('click', () => {
-        addModal.style.display = 'none';
-      });
-
-      // 새 일정 등록 모달 폼 제출
-      addEventForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const targetDate = addSelectedDate.value;
-
-        try {
-          await addDoc(collection(db, "shared_events"), {
-            title: addTitle.value.trim(),
-            startDate: targetDate,
-            endDate: targetDate,
-            date: targetDate,
-            category: addCategory.value,
-            author: currentUser,
-            createdAt: new Date()
-          });
-          addTitle.value = '';
+      if (btnCancelAdd) {
+        btnCancelAdd.addEventListener('click', () => {
           addModal.style.display = 'none';
-        } catch (err) {
-          alert("일정 추가 오류: " + err.message);
-        }
-      });
+        });
+      }
+
+      // 새 일정 등록 모달 폼 제출 (시작일~종료일 지정 가능)
+      if (addEventForm) {
+        addEventForm.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          let sDate = addStartDate.value;
+          let eDate = addEndDate.value;
+
+          if (sDate > eDate) {
+            [sDate, eDate] = [eDate, sDate];
+          }
+
+          try {
+            await addDoc(collection(db, "shared_events"), {
+              title: addTitle.value.trim(),
+              startDate: sDate,
+              endDate: eDate,
+              date: sDate,
+              category: addCategory.value,
+              author: currentUser,
+              createdAt: new Date()
+            });
+            addTitle.value = '';
+            addModal.style.display = 'none';
+          } catch (err) {
+            alert("일정 추가 오류: " + err.message);
+          }
+        });
+      }
 
       // 수동 날짜 입력 변경 시 달력에 반영
       if (eventStartDateInput) {
@@ -712,9 +729,11 @@
       }
 
       // 수정 취소 버튼
-      btnCancelEdit.addEventListener('click', () => {
-        editModal.style.display = 'none';
-      });
+      if (btnCancelEdit) {
+        btnCancelEdit.addEventListener('click', () => {
+          editModal.style.display = 'none';
+        });
+      }
 
       // 수정 모달 내 삭제 버튼 이벤트 처리
       const btnDeleteModal = document.getElementById('btnDeleteModal');
@@ -735,27 +754,29 @@
       }
 
       // 수정 폼 제출
-      editForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const id = editEventId.value;
-        let sDate = editStartDate.value;
-        let eDate = editEndDate.value;
+      if (editForm) {
+        editForm.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const id = editEventId.value;
+          let sDate = editStartDate.value;
+          let eDate = editEndDate.value;
 
-        if (sDate > eDate) [sDate, eDate] = [eDate, sDate];
+          if (sDate > eDate) [sDate, eDate] = [eDate, sDate];
 
-        try {
-          await updateDoc(doc(db, "shared_events", id), {
-            title: editTitle.value.trim(),
-            startDate: sDate,
-            endDate: eDate,
-            date: sDate,
-            category: editCategory.value
-          });
-          editModal.style.display = 'none';
-        } catch (error) {
-          alert("수정 실패: " + error.message);
-        }
-      });
+          try {
+            await updateDoc(doc(db, "shared_events", id), {
+              title: editTitle.value.trim(),
+              startDate: sDate,
+              endDate: eDate,
+              date: sDate,
+              category: editCategory.value
+            });
+            editModal.style.display = 'none';
+          } catch (error) {
+            alert("수정 실패: " + error.message);
+          }
+        });
+      }
     }
 
     function updateFormDates(start, end) {
@@ -918,19 +939,20 @@
           dayCell.appendChild(dotsContainer);
         }
 
-        // 날짜 클릭 시 새 일정 등록 모달 오픈
+        // 날짜 클릭 시 모달 오픈 (클릭한 날짜로 시작일/종료일 기본 지정)
         dayCell.addEventListener('click', () => {
           selectedDateStr = dateStr;
 
-          const [y, m, d] = dateStr.split('-');
-          addModalDateText.textContent = `📅 ${y}년 ${parseInt(m)}월 ${parseInt(d)}일`;
-          addSelectedDate.value = dateStr;
-          addTitle.value = '';
+          if (addStartDate && addEndDate) {
+            addStartDate.value = dateStr;
+            addEndDate.value = dateStr;
+          }
+          if (addTitle) addTitle.value = '';
 
           document.querySelectorAll('.day-cell').forEach(el => el.classList.remove('selected-day'));
           dayCell.classList.add('selected-day');
 
-          addModal.style.display = 'flex';
+          if (addModal) addModal.style.display = 'flex';
           renderWeeklyEvents(selectedDateStr);
         });
 
@@ -986,6 +1008,7 @@
       }
     }
   </script>
+
 
 </body>
 </html>
