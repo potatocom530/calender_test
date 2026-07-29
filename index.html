@@ -7,23 +7,26 @@
   <link rel="icon" type="image/png" href="icon.png">
   <title>실시간 공유 캘린더</title>
   <style>
-    :root {
-      --primary-color: #4f46e5;
-      --primary-hover: #4338ca;
-      --bg-color: #f8fafc;
-      --card-bg: #ffffff;
-      --text-main: #0f172a;
-      --text-muted: #64748b;
-      --border-color: #e2e8f0;
-      
-      --color-saturday: #2563eb;
-      --color-sunday: #dc2626;
+:root {
+  --primary-color: #4f46e5;
+  --primary-hover: #4338ca;
+  --bg-color: #f8fafc;
+  --card-bg: #ffffff;
+  --text-main: #0f172a;
+  --text-muted: #64748b;
+  --border-color: #e2e8f0;
+  
+  --color-saturday: #2563eb;
+  --color-sunday: #dc2626;
 
-      --cat-work: #3b82f6;
-      --cat-personal: #10b981;
-      --cat-important: #ef4444;
-      --cat-holiday: #e11d48;
-    }
+  /* 🌸 파스텔 컬러 팔레트 개편 */
+  --cat-work: #bae6fd;      /* 파스텔 하늘톤 (업무) */
+  --cat-personal: #fef08a;  /* 파스텔 노랑톤 (개인) */
+  --cat-important: #fecdd3; /* 파스텔 핑크/크림레드톤 (중요) */
+  --cat-holiday: #fda4af;   /* 파스텔 로즈톤 (공휴일) */
+}
+
+
 
     * {
       box-sizing: border-box;
@@ -347,11 +350,23 @@
     .btn-edit:hover { color: #3b82f6; }
     .btn-delete:hover { color: var(--cat-important); }
 
-    /* 카테고리 컬러 바인딩 */
-    .bg-work { background-color: var(--cat-work); color: white; }
-    .bg-personal { background-color: var(--cat-personal); color: white; }
-    .bg-important { background-color: var(--cat-important); color: white; }
-    .bg-holiday { background-color: var(--cat-holiday); color: white; }
+/* 카테고리 컬러 바인딩 (파스텔 카드 전용) */
+.bg-work { 
+  background-color: var(--cat-work) !important; 
+  color: #0c4a6e !important; /* 딥 블루 그레이 텍스트 */
+}
+.bg-personal { 
+  background-color: var(--cat-personal) !important; 
+  color: #713f12 !important; /* 딥 브라운 텍스트 */
+}
+.bg-important { 
+  background-color: var(--cat-important) !important; 
+  color: #881337 !important; /* 딥 버건디 텍스트 */
+}
+.bg-holiday { 
+  background-color: var(--cat-holiday) !important; 
+  color: #881337 !important; 
+}
   </style>
 </head>
 <body>
