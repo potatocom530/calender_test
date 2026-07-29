@@ -1,1168 +1,420 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <link rel="apple-touch-icon" href="icon.png">
-  <link rel="icon" type="image/png" href="icon.png">
-  <title>실시간 공유 캘린더</title>
-  <style>
-    :root {
-      --primary-color: #4f46e5;
-      --primary-hover: #4338ca;
-      --bg-color: #f8fafc;
-      --card-bg: #ffffff;
-      --text-main: #0f172a;
-      --text-muted: #64748b;
-      --border-color: #e2e8f0;
-      
-      --color-saturday: #2563eb;
-      --color-sunday: #dc2626;
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>일정 및 의견 관리 대시보드</title>
+    <style>
+        :root {
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-sub: #64748b;
+            --primary-color: #3b82f6;
+            --primary-hover: #2563eb;
+            --border-color: #e2e8f0;
+            --danger-color: #ef4444;
+        }
 
-      /* 파스텔 컬러 팔레트 */
-      --cat-work: #bae6fd;      /* 파스텔 하늘 (업무) */
-      --cat-personal: #fef08a;  /* 파스텔 노랑 (개인) */
-      --cat-important: #fecdd3; /* 파스텔 핑크 (중요) */
-      --cat-holiday: #fda4af;   /* 파스텔 로즈 (공휴일) */
-    }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-      -webkit-tap-highlight-color: transparent;
-      user-select: none;
-    }
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
 
-    input, textarea, select {
-      user-select: text;
-    }
+        .container {
+            max-width: 800px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
 
-    input, button, select, textarea {
-      -webkit-appearance: none;
-      border-radius: 8px;
-    }
+        /* 1. 로그인 / 프로필 선택 영역 */
+        .login-card {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
 
-    body {
-      background-color: var(--bg-color);
-      color: var(--text-main);
-      padding: 24px;
-      display: flex;
-      justify-content: center;
-      -webkit-overflow-scrolling: touch;
-      touch-action: manipulation;
-    }
+        .login-card h2 {
+            font-size: 16px;
+            margin-bottom: 14px;
+        }
 
-    /* 모달 레이어 */
-    .modal-overlay {
-      position: fixed;
-      top: 0; left: 0; width: 100vw; height: 100vh;
-      height: 100dvh;
-      background: rgba(15, 23, 42, 0.75);
-      backdrop-filter: blur(4px);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      z-index: 9999;
-      padding: 16px;
-      box-sizing: border-box;
-    }
+        .form-group {
+            margin-bottom: 14px;
+        }
 
-    .modal-box {
-      background: white;
-      padding: 24px;
-      border-radius: 16px;
-      max-width: 460px;
-      width: 100%;
-      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-      box-sizing: border-box;
-      max-height: calc(100dvh - 32px);
-      overflow-y: auto;
-      -webkit-overflow-scrolling: touch;
-    }
+        .form-group label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-sub);
+            margin-bottom: 6px;
+        }
 
-    .modal-box h2, .modal-box h3 { margin-bottom: 8px; font-size: 1.3rem; }
-    .modal-box p { color: var(--text-muted); font-size: 0.85rem; margin-bottom: 16px; }
+        .form-control {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 14px;
+            outline: none;
+        }
 
-    /* 메인 앱 레이아웃 */
-    .app-container {
-      width: 100%;
-      max-width: 800px;
-      display: flex;
-      flex-direction: column;
-      gap: 24px;
-      box-sizing: border-box;
-    }
+        .form-control:focus {
+            border-color: var(--primary-color);
+        }
 
-    @media (max-width: 850px) {
-      body { padding: 12px; }
-      .card { padding: 16px !important; }
-      .grid-days { gap: 4px !important; }
-    }
+        /* 프로필 이모지 선택 (2개 축소) */
+        .author-selector {
+            display: flex;
+            gap: 12px;
+        }
 
-    .card {
-      background: var(--card-bg);
-      border-radius: 16px;
-      border: 1px solid var(--border-color);
-      padding: 24px;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-      min-width: 0;
-    }
+        .author-option {
+            flex: 1;
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            padding: 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background-color: #fff;
+        }
 
-    /* 달력 헤더 & 컨트롤 */
-    .calendar-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 20px;
-    }
+        .author-option:hover {
+            border-color: #93c5fd;
+            background-color: #f0f9ff;
+        }
 
-    .calendar-header h2 { font-size: 1.5rem; font-weight: 700; }
+        .author-option.selected {
+            border-color: var(--primary-color);
+            background-color: #eff6ff;
+        }
 
-    .nav-btns button {
-      background: none;
-      border: 1px solid var(--border-color);
-      border-radius: 8px;
-      padding: 6px 12px;
-      cursor: pointer;
-      font-weight: 600;
-      transition: background 0.2s;
-    }
+        .author-emoji {
+            font-size: 28px;
+            display: block;
+        }
 
-    .nav-btns button:hover { background: #f1f5f9; }
+        .btn-primary {
+            width: 100%;
+            padding: 10px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 14px;
+        }
 
-    /* 달력 그리드 */
-    .grid-weekdays, .grid-days {
-      display: grid;
-      grid-template-columns: repeat(7, minmax(0, 1fr));
-      text-align: center;
-      width: 100%;
-    }
+        .btn-primary:hover {
+            background-color: var(--primary-hover);
+        }
 
-    .grid-weekdays {
-      font-weight: 600;
-      color: var(--text-muted);
-      margin-bottom: 8px;
-    }
+        /* 2. 간소화된 공휴일 카드 */
+        .section-title {
+            font-size: 15px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
 
-    .grid-weekdays div { padding: 8px 0; }
-    .grid-weekdays div:first-child { color: var(--color-sunday); }
-    .grid-weekdays div:last-child { color: var(--color-saturday); }
+        .holiday-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
 
-    .grid-days { gap: 6px; }
+        .holiday-card-compact {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 5px 10px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+        }
 
-    /* 달력 셀 스타일 */
-    .day-cell {
-      aspect-ratio: 1 / 1;
-      padding: 4px;
-      position: relative;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-start;
-      box-sizing: border-box;
-      overflow: hidden;
-      border-radius: 10px;
-      border: 1px solid var(--border-color, #e2e8f0);
-      background: #ffffff;
-      cursor: pointer;
-      transition: background 0.15s, border-color 0.15s;
-    }
+        .holiday-name {
+            font-weight: 600;
+            color: var(--text-main);
+        }
 
-    .day-cell:hover { border-color: var(--primary-color); background: #f4f5ff; }
-    .day-cell.empty { background: transparent; border: none; cursor: default; }
-    .day-cell.today { background: #eef2ff; border-color: var(--primary-color); }
-    
-    .day-cell.selected-day {
-      border: 2px solid var(--primary-color) !important;
-      background-color: #e0e7ff !important;
-    }
+        .holiday-date {
+            color: var(--text-sub);
+            font-size: 11px;
+        }
 
-    .day-number { 
-      font-size: 0.75rem; 
-      font-weight: 600; 
-      margin-bottom: 2px; 
-    }
-    
-    .day-cell.sat .day-number { color: var(--color-saturday); }
-    .day-cell.sun .day-number,
-    .day-cell.holiday .day-number { color: var(--color-sunday); }
+        /* 3. 코멘트 영역 */
+        .dashboard-content {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 16px;
+        }
 
-    /* 파스텔 도트 */
-    .dots-container {
-      display: flex;
-      gap: 3px;
-      margin-top: 4px;
-      justify-content: center;
-      flex-wrap: wrap;
-    }
+        .user-info-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 10px;
+            margin-bottom: 12px;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 13px;
+        }
 
-    .event-dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-    }
-    .dot-holiday { background-color: var(--cat-holiday); }
+        .user-profile-tag {
+            display: inline-flex;
+            align-items: center;
+            font-size: 18px;
+            background: #f1f5f9;
+            padding: 2px 10px;
+            border-radius: 12px;
+        }
 
-    /* 하단 주간 일정 영역 */
-    .weekly-section {
-      margin-top: 20px;
-      padding-top: 16px;
-      border-top: 1px dashed var(--border-color);
-    }
+        .comment-item {
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
 
-    .weekly-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 12px;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
+        .comment-item:last-child {
+            border-bottom: none;
+        }
 
-    .weekly-header h3 {
-      font-size: 0.95rem;
-      font-weight: 700;
-      color: #334155;
-    }
+        .comment-header {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 2px;
+        }
 
-    .weekly-nav-btns {
-      display: flex;
-      gap: 6px;
-    }
+        .comment-author {
+            font-size: 15px;
+        }
 
-    .btn-nav-icon {
-      min-width: 36px;
-      height: 36px;
-      padding: 0 8px;
-      font-size: 0.85rem;
-      font-weight: 700;
-      border: 1px solid var(--border-color);
-      background: #fff;
-      border-radius: 8px;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.15s ease;
-      color: var(--text-main);
-    }
+        .comment-date {
+            font-size: 10px;
+            color: var(--text-sub);
+        }
 
-    #btnThisWeek {
-      font-size: 0.6rem;
-      line-height: 1;
-    }
+        .comment-text {
+            font-size: 13px;
+            line-height: 1.4;
+            color: var(--text-main);
+        }
 
-    .btn-nav-icon:hover { background: #f1f5f9; }
-    .btn-nav-icon.active {
-      background: var(--primary-color);
-      color: #fff;
-      border-color: var(--primary-color);
-    }
+        /* 소형 삭제 버튼 */
+        .btn-delete-small {
+            background: transparent;
+            border: none;
+            color: #94a3b8;
+            font-size: 11px;
+            padding: 2px 4px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
 
-    .weekly-event-list, .all-event-list {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
+        .btn-delete-small:hover {
+            color: var(--danger-color);
+            background-color: #fef2f2;
+        }
 
-    /* 주간 & 전체 일정 카드 디자인 */
-    .weekly-card {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      padding: 12px 14px;
-      border-radius: 10px;
-      font-size: 0.9rem;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-      cursor: pointer;
-      transition: transform 0.1s ease, box-shadow 0.1s ease;
-    }
+        .comment-input-box {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
 
-    .weekly-card:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 3px 6px rgba(0,0,0,0.08);
-    }
+        .comment-input-box input {
+            flex: 1;
+        }
 
-    .weekly-card-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      width: 100%;
-    }
-
-    .weekly-card .card-date {
-      font-weight: 700;
-      font-size: 0.78rem;
-      opacity: 0.85;
-      margin-right: 8px;
-      min-width: 65px;
-    }
-
-    .weekly-card .card-title {
-      font-weight: 600;
-      flex-grow: 1;
-    }
-
-    .weekly-card .card-author {
-      font-size: 0.75rem;
-      opacity: 0.8;
-      background: rgba(255,255,255,0.6);
-      padding: 2px 6px;
-      border-radius: 4px;
-      margin-left: 8px;
-    }
-
-    .weekly-card .card-memo {
-      font-size: 0.8rem;
-      opacity: 0.85;
-      margin-top: 2px;
-      line-height: 1.35;
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      word-break: break-word;
-      white-space: pre-wrap;
-    }
-
-    /* 댓글(코멘트) 관련 스타일 */
-    .comments-section {
-      margin-top: 16px;
-      padding-top: 12px;
-      border-top: 1px solid var(--border-color);
-    }
-
-    .comments-section h4 {
-      font-size: 0.9rem;
-      color: #334155;
-      margin-bottom: 8px;
-    }
-
-    .comments-list {
-      max-height: 140px;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      margin-bottom: 10px;
-    }
-
-    .comment-item {
-      background: #f8fafc;
-      padding: 8px 10px;
-      border-radius: 6px;
-      font-size: 0.82rem;
-      border: 1px solid #edf2f7;
-    }
-
-    .comment-header {
-      display: flex;
-      justify-content: space-between;
-      font-weight: 600;
-      color: #475569;
-      margin-bottom: 2px;
-      font-size: 0.75rem;
-    }
-
-    .comment-input-box {
-      display: flex;
-      gap: 6px;
-    }
-
-    .comment-input-box input {
-      flex: 1;
-      padding: 8px;
-      font-size: 0.85rem !important;
-    }
-
-    .comment-input-box button {
-      padding: 8px 12px;
-      background: var(--primary-color);
-      color: white;
-      border: none;
-      font-weight: 600;
-      cursor: pointer;
-    }
-
-    .no-events {
-      text-align: center;
-      color: #94a3b8;
-      font-size: 0.85rem;
-      padding: 20px 0;
-    }
-
-    /* 폼 스타일 공통 */
-    .form-group { margin-bottom: 12px; }
-    .form-group label { display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 4px; }
-    .form-group input, .form-group select, .form-group textarea {
-      width: 100%; padding: 10px; border: 1px solid var(--border-color);
-      border-radius: 8px; outline: none; font-size: 15px !important;
-      box-sizing: border-box;
-    }
-    .form-group textarea {
-      resize: vertical;
-      min-height: 70px;
-    }
-    .form-group input:focus, .form-group select:focus, .form-group textarea:focus { 
-      border-color: var(--primary-color); 
-    }
-
-    .date-range-inputs {
-      display: flex;
-      gap: 6px;
-      align-items: center;
-    }
-
-    .date-range-inputs span {
-      font-size: 0.85rem;
-      color: var(--text-muted);
-    }
-
-    .btn-submit {
-      width: 100%; background: var(--primary-color); color: white;
-      border: none; padding: 12px; border-radius: 8px; font-weight: 600;
-      cursor: pointer; transition: background 0.2s; font-size: 1rem;
-    }
-    .btn-submit:hover { background: var(--primary-hover); }
-
-    .btn-secondary {
-      background: #e2e8f0; color: #334155;
-      border: none; padding: 12px; border-radius: 8px; font-weight: 600;
-      cursor: pointer; font-size: 1rem; margin-top: 8px; width: 100%;
-    }
-
-    .bg-work { background-color: var(--cat-work) !important; color: #0c4a6e !important; }
-    .bg-personal { background-color: var(--cat-personal) !important; color: #713f12 !important; }
-    .bg-important { background-color: var(--cat-important) !important; color: #881337 !important; }
-    .bg-holiday { background-color: var(--cat-holiday) !important; color: #881337 !important; }
-  </style>
+        .comment-input-box button {
+            width: auto;
+            padding: 0 16px;
+        }
+    </style>
 </head>
 <body>
 
-  <!-- 비밀번호 인증 레이어 -->
-  <div id="authOverlay" class="modal-overlay">
-    <div class="modal-box" style="text-align: center;">
-      <h2>🔒 캘린더 접속</h2>
-      <p>공유받은 비밀번호를 입력하세요.</p>
-      <input type="password" id="accessPassword" placeholder="비밀번호 입력" style="width:100%; padding:12px; margin-bottom:12px; border:1px solid var(--border-color); border-radius:8px;">
-      <input type="text" id="userName" placeholder="내 이름" value="익명" style="width:100%; padding:12px; margin-bottom:12px; border:1px solid var(--border-color); border-radius:8px;">
-      <button class="btn-submit" id="btnAuth">입장하기</button>
+<div class="container">
+
+    <!-- 프로필 선택 영역 (이름 없이 이모지 2개만 선택 가능) -->
+    <div class="login-card" id="loginCard">
+        <h2>접속 및 프로필 선택</h2>
+        <div class="form-group">
+            <label for="passwordInput">비밀번호</label>
+            <input type="password" id="passwordInput" class="form-control" placeholder="비밀번호 입력">
+        </div>
+
+        <div class="form-group">
+            <label>프로필 선택</label>
+            <div class="author-selector" id="authorSelector">
+                <div class="author-option selected" data-emoji="🎧">
+                    <span class="author-emoji">🎧</span>
+                </div>
+                <div class="author-option" data-emoji="💻">
+                    <span class="author-emoji">💻</span>
+                </div>
+            </div>
+        </div>
+
+        <button class="btn-primary" onclick="handleLogin()">접속하기</button>
     </div>
-  </div>
 
-  <!-- 일정 수정 & 코멘트 모달 -->
-  <div id="editModal" class="modal-overlay" style="display: none;">
-    <div class="modal-box">
-      <h3>✏️ 일정 상세 / 수정</h3>
-      <p>일정 내용 수정 및 코멘트를 작성하세요.</p>
-      <form id="editForm">
-        <input type="hidden" id="editEventId">
-        <div class="form-group">
-          <label for="editTitle">일정 제목</label>
-          <input type="text" id="editTitle" required>
+    <!-- 간소화된 공휴일 카드 -->
+    <div>
+        <div class="section-title">주요 공휴일</div>
+        <div class="holiday-list">
+            <div class="holiday-card-compact">
+                <span class="holiday-name">신정</span>
+                <span class="holiday-date">01.01</span>
+            </div>
+            <div class="holiday-card-compact">
+                <span class="holiday-name">설날</span>
+                <span class="holiday-date">02.16~02.18</span>
+            </div>
+            <div class="holiday-card-compact">
+                <span class="holiday-name">삼일절</span>
+                <span class="holiday-date">03.01</span>
+            </div>
+            <div class="holiday-card-compact">
+                <span class="holiday-name">어린이날</span>
+                <span class="holiday-date">05.05</span>
+            </div>
+            <div class="holiday-card-compact">
+                <span class="holiday-name">부처님오신날</span>
+                <span class="holiday-date">05.24</span>
+            </div>
+            <div class="holiday-card-compact">
+                <span class="holiday-name">현충일</span>
+                <span class="holiday-date">06.06</span>
+            </div>
+            <div class="holiday-card-compact">
+                <span class="holiday-name">광복절</span>
+                <span class="holiday-date">08.15</span>
+            </div>
+            <div class="holiday-card-compact">
+                <span class="holiday-name">추석</span>
+                <span class="holiday-date">09.24~09.26</span>
+            </div>
+            <div class="holiday-card-compact">
+                <span class="holiday-name">개천절</span>
+                <span class="holiday-date">10.03</span>
+            </div>
+            <div class="holiday-card-compact">
+                <span class="holiday-name">한글날</span>
+                <span class="holiday-date">10.09</span>
+            </div>
+            <div class="holiday-card-compact">
+                <span class="holiday-name">성탄절</span>
+                <span class="holiday-date">12.25</span>
+            </div>
         </div>
-        <div class="form-group">
-          <label for="editAuthor">작성자</label>
-          <input type="text" id="editAuthor" placeholder="작성자 이름" required>
-        </div>
-        <div class="form-group">
-          <label>기간 선택</label>
-          <div class="date-range-inputs">
-            <input type="date" id="editStartDate" required>
-            <span>~</span>
-            <input type="date" id="editEndDate" required>
-          </div>
-        </div>
-        <div class="form-group">
-          <label for="editCategory">카테고리</label>
-          <select id="editCategory">
-            <option value="work">업무</option>
-            <option value="personal">개인</option>
-            <option value="important">중요</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label for="editMemo">메모 (세부 일정)</label>
-          <textarea id="editMemo" placeholder="상세 내용이나 참고사항을 입력하세요."></textarea>
-        </div>
-
-        <!-- 💬 코멘트(댓글) 영역 -->
-        <div class="comments-section">
-          <h4>💬 일정 코멘트</h4>
-          <div class="comments-list" id="commentsList">
-            <!-- 댓글 항목들이 여기에 생성됨 -->
-          </div>
-          <div class="comment-input-box">
-            <input type="text" id="newCommentText" placeholder="댓글을 입력하세요...">
-            <button type="button" id="btnAddComment">등록</button>
-          </div>
-        </div>
-
-        <button type="submit" class="btn-submit" style="margin-top: 16px;">저장하기</button>
-        <button type="button" class="btn-secondary" id="btnDeleteModal" style="background: #fee2e2; color: #dc2626; margin-top: 8px;">삭제하기</button>
-        <button type="button" class="btn-secondary" id="btnCancelEdit" style="margin-top: 4px;">취소</button>
-      </form>
     </div>
-  </div>
 
-  <!-- 새 일정 등록 모달 -->
-  <div id="addModal" class="modal-overlay" style="display: none;">
-    <div class="modal-box">
-      <h3>➕ 새 일정 등록</h3>
-      <p style="margin-bottom: 12px; color: var(--text-muted); font-size: 0.85rem;">일정 내용과 기간을 입력하세요.</p>
-      <form id="addEventForm">
-        <div class="form-group">
-          <label for="addTitle">일정 제목</label>
-          <input type="text" id="addTitle" placeholder="예: 회의 또는 휴가" required>
+    <!-- 코멘트 대시보드 -->
+    <div class="dashboard-content" id="dashboardContent">
+        <div class="user-info-bar">
+            <div>
+                현재 프로필: 
+                <span class="user-profile-tag" id="currentProfileTag">🎧</span>
+            </div>
         </div>
-        <div class="form-group">
-          <label>기간 선택</label>
-          <div class="date-range-inputs">
-            <input type="date" id="addStartDate" required>
-            <span>~</span>
-            <input type="date" id="addEndDate" required>
-          </div>
+
+        <div class="section-title">의견 및 코멘트</div>
+        
+        <div id="commentList">
+            <div class="comment-item">
+                <div>
+                    <div class="comment-header">
+                        <span class="comment-author">🎧</span>
+                        <span class="comment-date">10:15 AM</span>
+                    </div>
+                    <div class="comment-text">공휴일 카드가 간소화되었습니다.</div>
+                </div>
+                <button class="btn-delete-small" onclick="deleteComment(this)">삭제</button>
+            </div>
         </div>
-        <div class="form-group">
-          <label for="addCategory">카테고리</label>
-          <select id="addCategory">
-            <option value="work">업무</option>
-            <option value="personal">개인</option>
-            <option value="important">중요</option>
-          </select>
+
+        <div class="comment-input-box">
+            <input type="text" id="newCommentInput" class="form-control" placeholder="코멘트 입력...">
+            <button class="btn-primary" onclick="addComment()">등록</button>
         </div>
-        <div class="form-group">
-          <label for="addMemo">메모 (세부 일정)</label>
-          <textarea id="addMemo" placeholder="상세 내용이나 참고사항을 입력하세요."></textarea>
-        </div>
-        <button type="submit" class="btn-submit">일정 공유하기</button>
-        <button type="button" class="btn-secondary" id="btnCancelAdd" style="margin-top: 6px;">취소</button>
-      </form>
     </div>
-  </div>
 
-  <div class="app-container">
-    <div class="card">
-      <div class="calendar-header">
-        <h2 id="monthYear"></h2>
-        <div class="nav-btns">
-          <button id="prevBtn">&lt; 이전</button>
-          <button id="todayBtn">오늘</button>
-          <button id="nextBtn">다음 &gt;</button>
-        </div>
-      </div>
+</div>
 
-      <div class="grid-weekdays">
-        <div>일</div><div>월</div><div>화</div><div>수</div><div>목</div><div>금</div><div>토</div>
-      </div>
+<script>
+    let selectedEmoji = "🎧";
 
-      <div class="grid-days" id="calendarGrid"></div>
-
-      <!-- 주간 상세 일정 영역 -->
-      <div class="weekly-section">
-        <div class="weekly-header">
-          <h3 id="weeklyTitle">📅 주간 일정</h3>
-          <div class="weekly-nav-btns">
-            <button type="button" id="btnPrevWeek" class="btn-nav-icon" title="이전주">&lt;</button>
-            <button type="button" id="btnThisWeek" class="btn-nav-icon active" title="이번주">●</button>
-            <button type="button" id="btnNextWeek" class="btn-nav-icon" title="다음주">&gt;</button>
-          </div>
-        </div>
-        <div class="weekly-event-list" id="weeklyEventList"></div>
-      </div>
-
-      <!-- 전체 일정 영역 추가 -->
-      <div class="weekly-section">
-        <div class="weekly-header">
-          <h3>📂 등록된 전체 일정</h3>
-        </div>
-        <div class="all-event-list" id="allEventList"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Firebase SDK 모듈 로드 -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, deleteDoc, doc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-
-    const SHARE_PASSWORD = "1131";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyA4YGzWCDYlhRVui6aELfFeg4Y0-34t2eQ",
-      authDomain: "shared-calendar-322ce.firebaseapp.com",
-      projectId: "shared-calendar-322ce",
-      storageBucket: "shared-calendar-322ce.firebasestorage.app",
-      messagingSenderId: "724619035853",
-      appId: "1:724619035853:web:d471cc950cf27990c49584"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-
-    // 공휴일 목록 (양력 및 2026 주요 음력/대체 공휴일 포함)
-    const holidaysData = {
-      '01-01': '신정',
-      '02-16': '설날 연휴', '02-17': '설날', '02-18': '설날 연휴',
-      '03-01': '삼일절', '03-02': '대체공휴일(삼일절)',
-      '05-05': '어린이날', '05-24': '부처님오신날', '05-25': '대체공휴일(부처님오신날)',
-      '06-06': '현충일',
-      '08-15': '광복절',
-      '09-24': '추석 연휴', '09-25': '추석', '09-26': '추석 연휴',
-      '10-03': '개천절', '10-09': '한글날',
-      '12-25': '성탄절'
-    };
-
-    let currentDate = new Date();
-    let selectedDateStr = formatDateStr(new Date());
-    let currentWeeklyDate = new Date();
-    let events = [];
-    let currentUser = "익명";
-
-    const monthYearText = document.getElementById('monthYear');
-    const calendarGrid = document.getElementById('calendarGrid');
-
-    // 수정 모달 요소
-    const editModal = document.getElementById('editModal');
-    const editForm = document.getElementById('editForm');
-    const editEventId = document.getElementById('editEventId');
-    const editTitle = document.getElementById('editTitle');
-    const editAuthor = document.getElementById('editAuthor');
-    const editStartDate = document.getElementById('editStartDate');
-    const editEndDate = document.getElementById('editEndDate');
-    const editCategory = document.getElementById('editCategory');
-    const editMemo = document.getElementById('editMemo');
-    const btnCancelEdit = document.getElementById('btnCancelEdit');
-
-    // 댓글 관련 요소
-    const commentsList = document.getElementById('commentsList');
-    const newCommentText = document.getElementById('newCommentText');
-    const btnAddComment = document.getElementById('btnAddComment');
-
-    // 등록 모달 요소
-    const addModal = document.getElementById('addModal');
-    const addEventForm = document.getElementById('addEventForm');
-    const addStartDate = document.getElementById('addStartDate');
-    const addEndDate = document.getElementById('addEndDate');
-    const addTitle = document.getElementById('addTitle');
-    const addCategory = document.getElementById('addCategory');
-    const addMemo = document.getElementById('addMemo');
-    const btnCancelAdd = document.getElementById('btnCancelAdd');
-
-    // 인증 처리
-    document.getElementById('btnAuth').addEventListener('click', () => {
-      const inputPass = document.getElementById('accessPassword').value;
-      const inputName = document.getElementById('userName').value.trim();
-
-      if (inputPass === SHARE_PASSWORD) {
-        currentUser = inputName || "익명";
-        document.getElementById('authOverlay').style.display = 'none';
-        initApp();
-      } else {
-        alert("비밀번호가 올바르지 않습니다.");
-      }
+    // 프로필 이모지 선택 이벤트
+    document.querySelectorAll('.author-option').forEach(option => {
+        option.addEventListener('click', function() {
+            document.querySelectorAll('.author-option').forEach(opt => opt.classList.remove('selected'));
+            this.classList.add('selected');
+            selectedEmoji = this.getAttribute('data-emoji');
+        });
     });
 
-    function initApp() {
-      // Firebase 데이터 실시간 수신
-      onSnapshot(collection(db, "shared_events"), (snapshot) => {
-        events = snapshot.docs.map(doc => {
-          const data = doc.data();
-          return {
-            id: doc.id,
-            ...data,
-            startDate: data.startDate || data.date,
-            endDate: data.endDate || data.date,
-            memo: data.memo || "",
-            comments: data.comments || []
-          };
-        });
-        renderCalendar();
-        renderWeeklyEvents(currentWeeklyDate);
-        renderAllEvents();
-      });
-
-      // 월간 달력 내비게이션 (상단 이전/다음/오늘 클릭 시 주간 일정 자동 동기화!)
-      document.getElementById('prevBtn').addEventListener('click', () => {
-        currentDate.setMonth(currentDate.getMonth() - 1);
-        currentWeeklyDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
-        renderCalendar();
-      });
-      document.getElementById('nextBtn').addEventListener('click', () => {
-        currentDate.setMonth(currentDate.getMonth() + 1);
-        currentWeeklyDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
-        renderCalendar();
-      });
-      document.getElementById('todayBtn').addEventListener('click', () => {
-        currentDate = new Date();
-        selectedDateStr = formatDateStr(currentDate);
-        currentWeeklyDate = new Date();
-        renderCalendar();
-      });
-
-      // 주간 일정 내비게이션
-      const btnPrevWeek = document.getElementById('btnPrevWeek');
-      const btnThisWeek = document.getElementById('btnThisWeek');
-      const btnNextWeek = document.getElementById('btnNextWeek');
-
-      function setActiveBtn(targetBtn) {
-        [btnPrevWeek, btnThisWeek, btnNextWeek].forEach(btn => {
-          if (btn) btn.classList.remove('active');
-        });
-        if (targetBtn) targetBtn.classList.add('active');
-      }
-
-      if (btnPrevWeek) {
-        btnPrevWeek.addEventListener('click', () => {
-          currentWeeklyDate.setDate(currentWeeklyDate.getDate() - 7);
-          syncMonthWithWeek(currentWeeklyDate);
-          renderCalendar();
-          setActiveBtn(btnPrevWeek);
-        });
-      }
-      if (btnThisWeek) {
-        btnThisWeek.addEventListener('click', () => {
-          currentWeeklyDate = new Date();
-          syncMonthWithWeek(currentWeeklyDate);
-          renderCalendar();
-          setActiveBtn(btnThisWeek);
-        });
-      }
-      if (btnNextWeek) {
-        btnNextWeek.addEventListener('click', () => {
-          currentWeeklyDate.setDate(currentWeeklyDate.getDate() + 7);
-          syncMonthWithWeek(currentWeeklyDate);
-          renderCalendar();
-          setActiveBtn(btnNextWeek);
-        });
-      }
-
-      // 등록 모달 취소
-      if (btnCancelAdd) {
-        btnCancelAdd.addEventListener('click', () => {
-          addModal.style.display = 'none';
-        });
-      }
-
-      // 새 일정 등록
-      if (addEventForm) {
-        addEventForm.addEventListener('submit', async (e) => {
-          e.preventDefault();
-          let sDate = addStartDate.value;
-          let eDate = addEndDate.value;
-
-          if (sDate > eDate) [sDate, eDate] = [eDate, sDate];
-
-          try {
-            await addDoc(collection(db, "shared_events"), {
-              title: addTitle.value.trim(),
-              startDate: sDate,
-              endDate: eDate,
-              date: sDate,
-              category: addCategory.value,
-              memo: addMemo.value.trim(),
-              author: currentUser,
-              comments: [],
-              createdAt: new Date()
-            });
-            addTitle.value = '';
-            addMemo.value = '';
-            addModal.style.display = 'none';
-          } catch (err) {
-            alert("일정 추가 오류: " + err.message);
-          }
-        });
-      }
-
-      // 수정 모달 취소
-      if (btnCancelEdit) {
-        btnCancelEdit.addEventListener('click', () => {
-          editModal.style.display = 'none';
-        });
-      }
-
-      // 일정 삭제
-      const btnDeleteModal = document.getElementById('btnDeleteModal');
-      if (btnDeleteModal) {
-        btnDeleteModal.addEventListener('click', async () => {
-          const id = editEventId.value;
-          if (!id) return;
-          
-          if (confirm("이 일정을 정말 삭제하시겠습니까?")) {
-            try {
-              await deleteDoc(doc(db, "shared_events", id));
-              editModal.style.display = 'none';
-            } catch (error) {
-              alert("삭제 중 오류가 발생했습니다: " + error.message);
-            }
-          }
-        });
-      }
-
-      // 일정 수정 및 저장
-      if (editForm) {
-        editForm.addEventListener('submit', async (e) => {
-          e.preventDefault();
-          const id = editEventId.value;
-          let sDate = editStartDate.value;
-          let eDate = editEndDate.value;
-
-          if (sDate > eDate) [sDate, eDate] = [eDate, sDate];
-
-          try {
-            await updateDoc(doc(db, "shared_events", id), {
-              title: editTitle.value.trim(),
-              author: editAuthor.value.trim() || '익명',
-              startDate: sDate,
-              endDate: eDate,
-              date: sDate,
-              category: editCategory.value,
-              memo: editMemo.value.trim()
-            });
-            editModal.style.display = 'none';
-          } catch (error) {
-            alert("수정 실패: " + error.message);
-          }
-        });
-      }
-
-      // 댓글 추가 처리
-      if (btnAddComment) {
-        btnAddComment.addEventListener('click', async () => {
-          const text = newCommentText.value.trim();
-          const eventId = editEventId.value;
-          if (!text || !eventId) return;
-
-          const currentEvent = events.find(e => e.id === eventId);
-          if (!currentEvent) return;
-
-          const newComments = [
-            ...(currentEvent.comments || []),
-            {
-              author: currentUser,
-              text: text,
-              date: new Date().toLocaleDateString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })
-            }
-          ];
-
-          try {
-            await updateDoc(doc(db, "shared_events", eventId), {
-              comments: newComments
-            });
-            newCommentText.value = '';
-            // 실시간 업데이트 후 모달 댓글창 다시 렌더링
-            renderCommentsInModal(newComments);
-          } catch (err) {
-            alert("댓글 등록 실패: " + err.message);
-          }
-        });
-      }
+    function handleLogin() {
+        document.getElementById('currentProfileTag').textContent = selectedEmoji;
+        alert(`${selectedEmoji} 프로필로 설정되었습니다.`);
     }
 
-    // 주간 날짜에 맞춰 월간 달력 동기화
-    function syncMonthWithWeek(targetWeekDate) {
-      const { sunday } = getWeekRange(targetWeekDate);
-      const thursday = new Date(sunday);
-      thursday.setDate(sunday.getDate() + 4);
+    function addComment() {
+        const input = document.getElementById('newCommentInput');
+        const text = input.value.trim();
+        if(!text) return;
 
-      currentDate.setFullYear(thursday.getFullYear());
-      currentDate.setMonth(thursday.getMonth());
-    }
+        const now = new Date();
+        const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-    // 수정 모달 열기 및 댓글 표시
-    function openEditModal(eventObj) {
-      editEventId.value = eventObj.id;
-      editTitle.value = eventObj.title;
-      editAuthor.value = eventObj.author || '익명';
-      editStartDate.value = eventObj.startDate;
-      editEndDate.value = eventObj.endDate;
-      editCategory.value = eventObj.category || 'work';
-      editMemo.value = eventObj.memo || '';
-      
-      renderCommentsInModal(eventObj.comments || []);
-      editModal.style.display = 'flex';
-    }
-
-    // 모달 내 댓글 목록 렌더링
-    function renderCommentsInModal(comments) {
-      commentsList.innerHTML = '';
-      if (!comments || comments.length === 0) {
-        commentsList.innerHTML = `<div style="color: #94a3b8; font-size: 0.8rem; text-align: center; padding: 10px 0;">작성된 코멘트가 없습니다.</div>`;
-        return;
-      }
-
-      comments.forEach(c => {
-        const item = document.createElement('div');
-        item.classList.add('comment-item');
-        item.innerHTML = `
-          <div class="comment-header">
-            <span>${escapeHtml(c.author)}</span>
-            <span>${c.date || ''}</span>
-          </div>
-          <div class="comment-text">${escapeHtml(c.text)}</div>
-        `;
-        commentsList.appendChild(item);
-      });
-      commentsList.scrollTop = commentsList.scrollHeight;
-    }
-
-    // 유틸리티 함수
-    function formatDateStr(d) {
-      const year = d.getFullYear();
-      const month = String(d.getMonth() + 1).padStart(2, '0');
-      const day = String(d.getDate()).padStart(2, '0');
-      return `${year}-${month}-${day}`;
-    }
-
-    function getWeekRange(date) {
-      const current = new Date(date);
-      const day = current.getDay();
-      const sunday = new Date(current);
-      sunday.setDate(current.getDate() - day);
-      const saturday = new Date(sunday);
-      saturday.setDate(sunday.getDate() + 6);
-      return { sunday, saturday };
-    }
-
-    function escapeHtml(text) {
-      if (!text) return '';
-      const div = document.createElement('div');
-      div.innerText = text;
-      return div.innerHTML;
-    }
-
-    function getHolidayName(dateStr) {
-      return holidaysData[dateStr.slice(5)] || null;
-    }
-
-    // 주간 일정 렌더링 (공휴일 카드도 주간 일정에 표시)
-    function renderWeeklyEvents(targetDateInput) {
-      const targetDate = targetDateInput ? new Date(targetDateInput) : new Date();
-      const { sunday, saturday } = getWeekRange(targetDate);
-      const startStr = formatDateStr(sunday);
-      const endStr = formatDateStr(saturday);
-
-      const titleEl = document.getElementById('weeklyTitle');
-      if (titleEl) {
-        titleEl.textContent = `📅 ${sunday.getMonth() + 1}.${sunday.getDate()} ~ ${saturday.getMonth() + 1}.${saturday.getDate()} 주간 일정`;
-      }
-
-      // 1. 해당 주의 공휴일 수집
-      const weeklyHolidays = [];
-      let cur = new Date(sunday);
-      while (cur <= saturday) {
-        const curStr = formatDateStr(cur);
-        const hName = getHolidayName(curStr);
-        if (hName) {
-          weeklyHolidays.push({
-            id: 'holiday_' + curStr,
-            title: `🔴 ${hName}`,
-            startDate: curStr,
-            endDate: curStr,
-            category: 'holiday',
-            author: '공휴일',
-            memo: '법정 공휴일입니다.',
-            isHolidayItem: true
-          });
-        }
-        cur.setDate(cur.getDate() + 1);
-      }
-
-      // 2. 해당 주의 일정 필터링
-      const userWeeklyEvents = events.filter(e => {
-        return !(e.endDate < startStr || e.startDate > endStr);
-      });
-
-      // 공휴일과 일정을 합치고 날짜순 정렬
-      const weeklyEvents = [...weeklyHolidays, ...userWeeklyEvents].sort((a, b) => a.startDate.localeCompare(b.startDate));
-
-      const listEl = document.getElementById('weeklyEventList');
-      if (!listEl) return;
-      listEl.innerHTML = '';
-
-      if (weeklyEvents.length === 0) {
-        listEl.innerHTML = `<div class="no-events">해당 주간에 등록된 일정이 없습니다.</div>`;
-        return;
-      }
-
-      weeklyEvents.forEach(e => {
-        const card = document.createElement('div');
-        card.classList.add('weekly-card');
-
-        if (e.category) {
-          card.classList.add(`bg-${e.category}`);
-        } else {
-          card.style.backgroundColor = '#e0f2fe';
-        }
-
-        let dateDisplay = '';
-        const [sy, sm, sd] = e.startDate.split('-');
-        const [ey, em, ed] = e.endDate.split('-');
-
-        if (e.startDate === e.endDate) {
-          dateDisplay = `${parseInt(sm)}.${parseInt(sd)}`;
-        } else {
-          dateDisplay = `${parseInt(sm)}.${parseInt(sd)}~${parseInt(em)}.${parseInt(ed)}`;
-        }
-
-        let cardContent = `
-          <div class="weekly-card-header">
-            <span class="card-date">${dateDisplay}</span>
-            <span class="card-title">${escapeHtml(e.title)}</span>
-            ${e.author ? `<span class="card-author">${escapeHtml(e.author)}</span>` : ''}
-          </div>
+        const commentList = document.getElementById('commentList');
+        const newItem = document.createElement('div');
+        newItem.className = 'comment-item';
+        newItem.innerHTML = `
+            <div>
+                <div class="comment-header">
+                    <span class="comment-author">${selectedEmoji}</span>
+                    <span class="comment-date">${timeStr}</span>
+                </div>
+                <div class="comment-text">${text}</div>
+            </div>
+            <button class="btn-delete-small" onclick="deleteComment(this)">삭제</button>
         `;
 
-        if (e.memo && e.memo.trim() !== "") {
-          cardContent += `<div class="card-memo">${escapeHtml(e.memo)}</div>`;
-        }
-
-        card.innerHTML = cardContent;
-        if (!e.isHolidayItem) {
-          card.addEventListener('click', () => openEditModal(e));
-        }
-        listEl.appendChild(card);
-      });
+        commentList.appendChild(newItem);
+        input.value = '';
     }
 
-    // 전체 일정 목록 렌더링
-    function renderAllEvents() {
-      const listEl = document.getElementById('allEventList');
-      if (!listEl) return;
-      listEl.innerHTML = '';
-
-      if (events.length === 0) {
-        listEl.innerHTML = `<div class="no-events">등록된 전체 일정이 없습니다.</div>`;
-        return;
-      }
-
-      const sortedEvents = [...events].sort((a, b) => b.startDate.localeCompare(a.startDate));
-
-      sortedEvents.forEach(e => {
-        const card = document.createElement('div');
-        card.classList.add('weekly-card');
-
-        if (e.category) {
-          card.classList.add(`bg-${e.category}`);
-        } else {
-          card.style.backgroundColor = '#e0f2fe';
+    function deleteComment(btn) {
+        if(confirm('이 코멘트를 삭제하시겠습니까?')) {
+            const item = btn.closest('.comment-item');
+            item.remove();
         }
-
-        let dateDisplay = '';
-        const [sy, sm, sd] = e.startDate.split('-');
-        const [ey, em, ed] = e.endDate.split('-');
-
-        if (e.startDate === e.endDate) {
-          dateDisplay = `${sy}.${parseInt(sm)}.${parseInt(sd)}`;
-        } else {
-          dateDisplay = `${sy}.${parseInt(sm)}.${parseInt(sd)}~${em}.${parseInt(ed)}`;
-        }
-
-        const commentCount = e.comments ? e.comments.length : 0;
-
-        let cardContent = `
-          <div class="weekly-card-header">
-            <span class="card-date" style="min-width:105px;">${dateDisplay}</span>
-            <span class="card-title">${escapeHtml(e.title)} ${commentCount > 0 ? `<small style="font-weight:normal; opacity:0.8;">💬 ${commentCount}</small>` : ''}</span>
-            ${e.author ? `<span class="card-author">${escapeHtml(e.author)}</span>` : ''}
-          </div>
-        `;
-
-        if (e.memo && e.memo.trim() !== "") {
-          cardContent += `<div class="card-memo">${escapeHtml(e.memo)}</div>`;
-        }
-
-        card.innerHTML = cardContent;
-        card.addEventListener('click', () => openEditModal(e));
-        listEl.appendChild(card);
-      });
     }
+</script>
 
-    // 월간 달력 렌더링
-    function renderCalendar() {
-      const year = currentDate.getFullYear();
-      const month = currentDate.getMonth();
-
-      monthYearText.textContent = `${year}년 ${month + 1}월`;
-      calendarGrid.innerHTML = '';
-
-      const firstDay = new Date(year, month, 1).getDay();
-      const lastDate = new Date(year, month + 1, 0).getDate();
-      const todayStr = formatDateStr(new Date());
-
-      for (let i = 0; i < firstDay; i++) {
-        const emptyCell = document.createElement('div');
-        emptyCell.classList.add('day-cell', 'empty');
-        calendarGrid.appendChild(emptyCell);
-      }
-
-      for (let day = 1; day <= lastDate; day++) {
-        const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-        const dayOfWeek = new Date(year, month, day).getDay();
-        const holidayName = getHolidayName(dateStr);
-
-        const dayCell = document.createElement('div');
-        dayCell.classList.add('day-cell');
-
-        if (dayOfWeek === 0) dayCell.classList.add('sun');
-        if (dayOfWeek === 6) dayCell.classList.add('sat');
-        if (holidayName) dayCell.classList.add('holiday');
-        if (dateStr === todayStr) dayCell.classList.add('today');
-        if (dateStr === selectedDateStr) dayCell.classList.add('selected-day');
-
-        dayCell.innerHTML = `<div class="day-number">${day}</div>`;
-
-        const dotsContainer = document.createElement('div');
-        dotsContainer.classList.add('dots-container');
-
-        if (holidayName) {
-          const holidayDot = document.createElement('div');
-          holidayDot.classList.add('event-dot', 'dot-holiday');
-          holidayDot.title = holidayName;
-          dotsContainer.appendChild(holidayDot);
-        }
-
-        const dayEvents = events.filter(e => dateStr >= e.startDate && dateStr <= e.endDate);
-        dayEvents.slice(0, 3).forEach(e => {
-          const dot = document.createElement('div');
-          dot.classList.add('event-dot');
-          dot.classList.add(`bg-${e.category || 'work'}`);
-          dotsContainer.appendChild(dot);
-        });
-
-        if (holidayName || dayEvents.length > 0) {
-          dayCell.appendChild(dotsContainer);
-        }
-
-        // 날짜 클릭 시 일정 추가 모달 열기 & 주간 포커스 동기화
-        dayCell.addEventListener('click', () => {
-          selectedDateStr = dateStr;
-          currentWeeklyDate = new Date(dateStr);
-
-          if (addStartDate && addEndDate) {
-            addStartDate.value = dateStr;
-            addEndDate.value = dateStr;
-          }
-          if (addTitle) addTitle.value = '';
-          if (addMemo) addMemo.value = '';
-
-          document.querySelectorAll('.day-cell').forEach(el => el.classList.remove('selected-day'));
-          dayCell.classList.add('selected-day');
-
-          if (addModal) addModal.style.display = 'flex';
-          
-          syncMonthWithWeek(currentWeeklyDate);
-          renderCalendar();
-        });
-
-        calendarGrid.appendChild(dayCell);
-      }
-
-      renderWeeklyEvents(currentWeeklyDate);
-    }
-  </script>
 </body>
 </html>
