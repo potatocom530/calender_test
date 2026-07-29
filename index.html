@@ -267,7 +267,7 @@
   <!-- Firebase SDK 모듈 로드 -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, deleteDoc, doc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     // ----------------------------------------------------
     // [설정 1] 접속 비밀번호
@@ -481,6 +481,59 @@ const firebaseConfig = {
       div.innerText = text;
       return div.innerHTML;
     }
+
+
+    // 일정 수정 함수
+async function updateSchedule(docId, currentText) {
+  // 1. 사용자에게 새로 변경할 내용을 입력받음
+  const newText = prompt("수정할 내용을 입력하세요:", currentText);
+  
+  // 취소 버튼을 누르거나 빈 값을 입력하면 실행하지 않음
+  if (!newText || newText.trim() === "" || newText === currentText) return;
+
+  try {
+    // 2. 해당 문서(doc)의 내용을 Firestore에서 업데이트
+    const docRef = doc(db, "schedules", docId); // 'schedules'는 Firestore 컬렉션 이름
+    await updateDoc(docRef, {
+      text: newText.trim() // 'text' 필드를 새 내용으로 변경
+    });
+    alert("일정이 수정되었습니다!");
+  } catch (error) {
+    console.error("수정 실패:", error);
+    alert("수정 중 오류가 발생했습니다.");
+  }
+}
+    // Firestore 실시간 데이터 불러오기 (onSnapshot) 안의 목록 생성 부분 예시
+onSnapshot(collection(db, "schedules"), (snapshot) => {
+  const listElement = document.getElementById("scheduleList");
+  listElement.innerHTML = ""; // 기존 목록 초기화
+
+  snapshot.docs.forEach((doc) => {
+    const data = doc.data();
+    const id = doc.id;
+
+    // HTML 태그 생성
+    const li = document.createElement("li");
+    li.innerHTML = `
+      <span>${data.text}</span>
+      <button class="edit-btn">수정</button>
+      <button class="delete-btn">삭제</button>
+    `;
+
+    // [수정] 버튼 이벤트 연결
+    li.querySelector(".edit-btn").addEventListener("click", () => {
+      updateSchedule(id, data.text);
+    });
+
+    // [삭제] 버튼 이벤트 연결 (기존 삭제 코드)
+    li.querySelector(".delete-btn").addEventListener("click", () => {
+      deleteSchedule(id);
+    });
+
+    listElement.appendChild(li);
+  });
+});
+    
   </script>
 </body>
 </html>
