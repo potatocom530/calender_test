@@ -1044,8 +1044,6 @@
             startDate: curStr,
             endDate: curStr,
             category: 'holiday',
-            author: '공휴일',
-            memo: '법정 공휴일입니다.',
             isHolidayItem: true
           });
         }
@@ -1087,15 +1085,16 @@
           dateDisplay = `${parseInt(sm)}.${parseInt(sd)}~${parseInt(em)}.${parseInt(ed)}`;
         }
 
+        // 공휴일 카드는 날짜와 공휴일 이름만 간략하게 표기
         let cardContent = `
           <div class="weekly-card-header">
             <span class="card-date">${dateDisplay}</span>
             <span class="card-title">${escapeHtml(e.title)}</span>
-            ${e.author ? `<span class="card-author">${escapeHtml(e.author)}</span>` : ''}
+            ${(!e.isHolidayItem && e.author) ? `<span class="card-author">${escapeHtml(e.author)}</span>` : ''}
           </div>
         `;
 
-        if (e.memo && e.memo.trim() !== "") {
+        if (!e.isHolidayItem && e.memo && e.memo.trim() !== "") {
           cardContent += `<div class="card-memo">${escapeHtml(e.memo)}</div>`;
         }
 
@@ -1133,18 +1132,22 @@
         let dateDisplay = '';
         const [sy, sm, sd] = e.startDate.split('-');
         const [ey, em, ed] = e.endDate.split('-');
+        
+        // 연도 2자리로 변환 (2026 -> 26)
+        const shortSy = sy.slice(-2);
+        const shortEy = ey.slice(-2);
 
         if (e.startDate === e.endDate) {
-          dateDisplay = `${sy}.${parseInt(sm)}.${parseInt(sd)}`;
+          dateDisplay = `${shortSy}.${parseInt(sm)}.${parseInt(sd)}`;
         } else {
-          dateDisplay = `${sy}.${parseInt(sm)}.${parseInt(sd)}~${em}.${parseInt(ed)}`;
+          dateDisplay = `${shortSy}.${parseInt(sm)}.${parseInt(sd)}~${em}.${parseInt(ed)}`;
         }
 
         const commentCount = e.comments ? e.comments.length : 0;
 
         let cardContent = `
           <div class="weekly-card-header">
-            <span class="card-date" style="min-width:105px;">${dateDisplay}</span>
+            <span class="card-date" style="min-width:85px;">${dateDisplay}</span>
             <span class="card-title">${escapeHtml(e.title)} ${commentCount > 0 ? `<small style="font-weight:normal; opacity:0.8;">💬 ${commentCount}</small>` : ''}</span>
             ${e.author ? `<span class="card-author">${escapeHtml(e.author)}</span>` : ''}
           </div>
