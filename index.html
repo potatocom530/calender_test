@@ -198,6 +198,19 @@
     }
     .btn-delete:hover { color: var(--cat-important); }
 
+    .btn-edit {
+      background: none;
+      border: none;
+      color: var(--text-muted); /* 기존 텍스트 색상과 비슷하게 */
+      cursor: pointer;
+      font-size: 0.85rem;       /* 삭제 버튼(x)보다는 조금 작게 */
+      margin-right: 8px;        /* 삭제 버튼과의 간격 */
+    }
+    .btn-edit:hover {
+      color: #3b82f6; /* 마우스 올렸을 때 파란색으로 변경 (취향껏 변경 가능) */
+      text-decoration: underline; /* 마우스 올렸을 때 밑줄 */
+    }
+
     .bg-work { background-color: var(--cat-work); }
     .bg-personal { background-color: var(--cat-personal); }
     .bg-important { background-color: var(--cat-important); }
