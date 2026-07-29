@@ -39,7 +39,7 @@
       user-select: text;
     }
 
-    input, button, select {
+    input, button, select, textarea {
       -webkit-appearance: none;
       border-radius: 8px;
     }
@@ -54,7 +54,7 @@
       touch-action: manipulation;
     }
 
-    /* 비밀번호 인증 레이어 & 수정 모달 공통 */
+    /* 비밀번호 인증 레이어 & 모달 공통 */
     .modal-overlay {
       position: fixed;
       top: 0; left: 0; width: 100vw; height: 100vh;
@@ -73,7 +73,7 @@
       background: white;
       padding: 24px;
       border-radius: 16px;
-      max-width: 400px;
+      max-width: 420px;
       width: 100%;
       box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
       box-sizing: border-box;
@@ -85,37 +85,20 @@
     .modal-box h2, .modal-box h3 { margin-bottom: 8px; font-size: 1.3rem; }
     .modal-box p { color: var(--text-muted); font-size: 0.85rem; margin-bottom: 16px; }
 
-    /* 메인 앱 레이아웃 */
+    /* 메인 앱 레이아웃 (1컬럼 레이아웃으로 변경) */
     .app-container {
       width: 100%;
-      max-width: 1100px;
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) 340px;
+      max-width: 800px;
+      display: flex;
+      flex-direction: column;
       gap: 24px;
       box-sizing: border-box;
     }
 
-    /* 📱 모바일 / 태블릿 (850px 이하) - 1컬럼 자동 전환 */
     @media (max-width: 850px) {
       body { padding: 12px; }
-      
-      .app-container { 
-        display: flex !important;
-        flex-direction: column !important;
-        gap: 16px;
-      }
-      
-      .sidebar {
-        width: 100% !important;
-      }
-
-      .card {
-        padding: 16px !important;
-      }
-
-      .grid-days {
-        gap: 4px !important;
-      }
+      .card { padding: 16px !important; }
+      .grid-days { gap: 4px !important; }
     }
 
     .card {
@@ -191,14 +174,9 @@
     .day-cell.empty { background: transparent; border: none; cursor: default; }
     .day-cell.today { background: #eef2ff; border-color: var(--primary-color); }
     
-    /* 선택/범위 날짜 강조 */
     .day-cell.selected-day {
       border: 2px solid var(--primary-color) !important;
       background-color: #e0e7ff !important;
-    }
-    .day-cell.in-range {
-      background-color: #f0f3ff !important;
-      border-color: #c7d2fe !important;
     }
 
     .day-number { 
@@ -227,7 +205,7 @@
     }
     .dot-holiday { background-color: var(--cat-holiday); }
 
-    /* 하단 주간 일정 상세 영역 */
+    /* 하단 주간 일정 영역 */
     .weekly-section {
       margin-top: 20px;
       padding-top: 16px;
@@ -237,7 +215,6 @@
     .weekly-header {
       display: flex;
       justify-content: space-between;
-      align-content: center;
       align-items: center;
       margin-bottom: 12px;
       flex-wrap: wrap;
@@ -250,38 +227,47 @@
       color: #334155;
     }
 
+    /* 2. 주간 이동 아이콘 버튼 스타일 */
     .weekly-nav-btns {
       display: flex;
-      gap: 4px;
+      gap: 6px;
     }
 
-    .btn-nav-sm {
-      padding: 4px 8px;
-      font-size: 0.78rem;
-      border: 1px solid var(--border-color, #e2e8f0);
+    .btn-nav-icon {
+      min-width: 36px;
+      height: 36px;
+      padding: 0 8px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      border: 1px solid var(--border-color);
       background: #fff;
-      border-radius: 4px;
+      border-radius: 8px;
       cursor: pointer;
-      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s ease;
+      color: var(--text-main);
     }
-    .btn-nav-sm:hover { background: #f1f5f9; }
-    .btn-nav-sm.active {
-      background: var(--primary-color, #3b82f6);
+    .btn-nav-icon:hover { background: #f1f5f9; }
+    .btn-nav-icon.active {
+      background: var(--primary-color);
       color: #fff;
-      border-color: var(--primary-color, #3b82f6);
+      border-color: var(--primary-color);
     }
 
     .weekly-event-list {
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 10px;
     }
 
+    /* 주간 일정 카드 디자인 (메모 및 Line Clamp 반영) */
     .weekly-card {
       display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 10px 14px;
+      flex-direction: column;
+      gap: 4px;
+      padding: 12px 14px;
       border-radius: 10px;
       font-size: 0.9rem;
       box-shadow: 0 1px 3px rgba(0,0,0,0.05);
@@ -294,11 +280,18 @@
       box-shadow: 0 3px 6px rgba(0,0,0,0.08);
     }
 
+    .weekly-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+    }
+
     .weekly-card .card-date {
       font-weight: 700;
       font-size: 0.78rem;
       opacity: 0.85;
-      margin-right: 10px;
+      margin-right: 8px;
       min-width: 65px;
     }
 
@@ -316,24 +309,43 @@
       margin-left: 8px;
     }
 
+    /* 4. 메모 Line Clamp (말줄임 처리) */
+    .weekly-card .card-memo {
+      font-size: 0.8rem;
+      opacity: 0.85;
+      margin-top: 2px;
+      line-height: 1.35;
+      display: -webkit-box;
+      -webkit-line-clamp: 2; /* 최대 2줄 표시 후 ... 처리 */
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      word-break: break-word;
+      white-space: pre-wrap;
+    }
+
     .no-events {
       text-align: center;
       color: #94a3b8;
       font-size: 0.85rem;
-      padding: 16px 0;
+      padding: 20px 0;
     }
 
-    /* 사이드바 폼 & 이벤트 리스트 */
-    .sidebar h3 { font-size: 1.2rem; margin-bottom: 16px; }
-
+    /* 폼 스타일 공통 */
     .form-group { margin-bottom: 12px; }
     .form-group label { display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 4px; }
-    .form-group input, .form-group select {
+    .form-group input, .form-group select, .form-group textarea {
       width: 100%; padding: 10px; border: 1px solid var(--border-color);
-      border-radius: 8px; outline: none; font-size: 16px !important;
+      border-radius: 8px; outline: none; font-size: 15px !important;
       box-sizing: border-box;
     }
-    .form-group input:focus, .form-group select:focus { border-color: var(--primary-color); }
+    .form-group textarea {
+      resize: vertical;
+      min-height: 70px;
+    }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus { 
+      border-color: var(--primary-color); 
+    }
 
     .date-range-inputs {
       display: flex;
@@ -359,63 +371,11 @@
       cursor: pointer; font-size: 1rem; margin-top: 8px; width: 100%;
     }
 
-    .event-list {
-      margin-top: 24px; display: flex; flex-direction: column;
-      gap: 8px; max-height: 280px; overflow-y: auto;
-    }
-
-    .event-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 10px;
-      background: #f8fafc;
-      border: 1px solid var(--border-color);
-      border-radius: 8px;
-    }
-
-    .event-info { display: flex; flex-direction: column; }
-    .event-title { font-size: 0.9rem; font-weight: 600; }
-    .event-author { font-size: 0.75rem; color: #4338ca; font-weight: 500; }
-    .event-date { font-size: 0.75rem; color: var(--text-muted); }
-
-    .event-actions {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .btn-edit, .btn-delete {
-      background: none;
-      border: none;
-      color: #94a3b8;
-      cursor: pointer;
-      font-size: 1.05rem;
-      padding: 0;
-      line-height: 1;
-      transition: color 0.15s ease;
-    }
-
-    .btn-edit:hover { color: #3b82f6; }
-    .btn-delete:hover { color: var(--cat-important); }
-
     /* 카테고리 파스텔 컬러 바인딩 */
-    .bg-work { 
-      background-color: var(--cat-work) !important; 
-      color: #0c4a6e !important; 
-    }
-    .bg-personal { 
-      background-color: var(--cat-personal) !important; 
-      color: #713f12 !important; 
-    }
-    .bg-important { 
-      background-color: var(--cat-important) !important; 
-      color: #881337 !important; 
-    }
-    .bg-holiday { 
-      background-color: var(--cat-holiday) !important; 
-      color: #881337 !important; 
-    }
+    .bg-work { background-color: var(--cat-work) !important; color: #0c4a6e !important; }
+    .bg-personal { background-color: var(--cat-personal) !important; color: #713f12 !important; }
+    .bg-important { background-color: var(--cat-important) !important; color: #881337 !important; }
+    .bg-holiday { background-color: var(--cat-holiday) !important; color: #881337 !important; }
   </style>
 </head>
 <body>
@@ -458,6 +418,11 @@
             <option value="important">중요</option>
           </select>
         </div>
+        <!-- 4. 메모 입력란 추가 -->
+        <div class="form-group">
+          <label for="editMemo">메모 (세부 일정)</label>
+          <textarea id="editMemo" placeholder="상세 내용이나 참고사항을 입력하세요."></textarea>
+        </div>
         <button type="submit" class="btn-submit">저장하기</button>
         <button type="button" class="btn-secondary" id="btnDeleteModal" style="background: #fee2e2; color: #dc2626; margin-top: 8px;">삭제하기</button>
         <button type="button" class="btn-secondary" id="btnCancelEdit" style="margin-top: 4px;">취소</button>
@@ -491,6 +456,11 @@
             <option value="important">중요</option>
           </select>
         </div>
+        <!-- 4. 메모 입력란 추가 -->
+        <div class="form-group">
+          <label for="addMemo">메모 (세부 일정)</label>
+          <textarea id="addMemo" placeholder="상세 내용이나 참고사항을 입력하세요."></textarea>
+        </div>
         <button type="submit" class="btn-submit">일정 공유하기</button>
         <button type="button" class="btn-secondary" id="btnCancelAdd" style="margin-top: 6px;">취소</button>
       </form>
@@ -498,7 +468,7 @@
   </div>
 
   <div class="app-container">
-    <!-- 메인 달력 카드 -->
+    <!-- 메인 달력 및 주간 일정 카드 -->
     <div class="card">
       <div class="calendar-header">
         <h2 id="monthYear"></h2>
@@ -515,51 +485,19 @@
 
       <div class="grid-days" id="calendarGrid"></div>
 
-      <!-- 주간 상세 일정 영역 -->
+      <!-- 주간 상세 일정 영역 (3. 하단 영역 제거 및 깔끔하게 재구성) -->
       <div class="weekly-section">
         <div class="weekly-header">
           <h3 id="weeklyTitle">📅 주간 일정</h3>
+          <!-- 2. 이전주 / 이번주 / 다음주 아이콘화 (< ● >) -->
           <div class="weekly-nav-btns">
-            <button type="button" id="btnPrevWeek" class="btn-nav-sm">◀ 이전주</button>
-            <button type="button" id="btnThisWeek" class="btn-nav-sm active">이번주</button>
-            <button type="button" id="btnNextWeek" class="btn-nav-sm">다음주 ▶</button>
+            <button type="button" id="btnPrevWeek" class="btn-nav-icon" title="이전주">&lt;</button>
+            <button type="button" id="btnThisWeek" class="btn-nav-icon active" title="이번주">●</button>
+            <button type="button" id="btnNextWeek" class="btn-nav-icon" title="다음주">&gt;</button>
           </div>
         </div>
-        <!-- 주간 일정 리스트 출력 컨테이너 -->
+        <!-- 1. 주간 일정 리스트 컨테이너 -->
         <div class="weekly-event-list" id="weeklyEventList"></div>
-      </div>
-    </div>
-
-    <!-- 우측 / 하단 일정 등록 사이드바 -->
-    <div class="sidebar">
-      <div class="card">
-        <h3>새 일정 등록</h3>
-        <form id="eventForm">
-          <div class="form-group">
-            <label for="eventTitle">일정 제목</label>
-            <input type="text" id="eventTitle" placeholder="예: 회의 또는 휴가" required>
-          </div>
-          <div class="form-group">
-            <label>기간 선택 (달력 클릭으로도 가능)</label>
-            <div class="date-range-inputs">
-              <input type="date" id="eventStartDate" required>
-              <span>~</span>
-              <input type="date" id="eventEndDate" required>
-            </div>
-          </div>
-          <div class="form-group">
-            <label for="eventCategory">카테고리</label>
-            <select id="eventCategory">
-              <option value="work">업무</option>
-              <option value="personal">개인</option>
-              <option value="important">중요</option>
-            </select>
-          </div>
-          <button type="submit" class="btn-submit">일정 공유하기</button>
-        </form>
-
-        <h3 style="margin-top: 24px;">공유된 일정 목록</h3>
-        <div class="event-list" id="eventList"></div>
       </div>
     </div>
   </div>
@@ -592,19 +530,11 @@
     let currentDate = new Date();
     let selectedDateStr = formatDateStr(new Date());
     let currentWeeklyDate = new Date();
-    let startDateSelection = null;
-    let endDateSelection = null;
     let events = [];
     let currentUser = "익명";
 
     const monthYearText = document.getElementById('monthYear');
     const calendarGrid = document.getElementById('calendarGrid');
-    const eventForm = document.getElementById('eventForm');
-    const eventTitleInput = document.getElementById('eventTitle');
-    const eventStartDateInput = document.getElementById('eventStartDate');
-    const eventEndDateInput = document.getElementById('eventEndDate');
-    const eventCategorySelect = document.getElementById('eventCategory');
-    const eventList = document.getElementById('eventList');
 
     // 수정 모달 요소
     const editModal = document.getElementById('editModal');
@@ -614,6 +544,7 @@
     const editStartDate = document.getElementById('editStartDate');
     const editEndDate = document.getElementById('editEndDate');
     const editCategory = document.getElementById('editCategory');
+    const editMemo = document.getElementById('editMemo');
     const btnCancelEdit = document.getElementById('btnCancelEdit');
 
     // 등록 모달 요소
@@ -623,6 +554,7 @@
     const addEndDate = document.getElementById('addEndDate');
     const addTitle = document.getElementById('addTitle');
     const addCategory = document.getElementById('addCategory');
+    const addMemo = document.getElementById('addMemo');
     const btnCancelAdd = document.getElementById('btnCancelAdd');
 
     // 인증 처리
@@ -640,11 +572,7 @@
     });
 
     function initApp() {
-      const todayStr = formatDateStr(new Date());
-      startDateSelection = todayStr;
-      endDateSelection = todayStr;
-      updateFormDates(todayStr, todayStr);
-
+      // 1. Firebase 실시간 수신 설정 및 리스트 바인딩
       onSnapshot(collection(db, "shared_events"), (snapshot) => {
         events = snapshot.docs.map(doc => {
           const data = doc.data();
@@ -652,11 +580,11 @@
             id: doc.id,
             ...data,
             startDate: data.startDate || data.date,
-            endDate: data.endDate || data.date
+            endDate: data.endDate || data.date,
+            memo: data.memo || ""
           };
         });
         renderCalendar();
-        renderEventList();
         renderWeeklyEvents(currentWeeklyDate);
       });
 
@@ -671,16 +599,12 @@
       });
       document.getElementById('todayBtn').addEventListener('click', () => {
         currentDate = new Date();
-        const today = formatDateStr(currentDate);
-        selectedDateStr = today;
+        selectedDateStr = formatDateStr(currentDate);
         currentWeeklyDate = new Date();
-        startDateSelection = today;
-        endDateSelection = today;
-        updateFormDates(today, today);
         renderCalendar();
       });
 
-      // 주간 일정 네비게이션 버튼 및 active 클래스 처리
+      // 2. 주간 일정 아이콘 네비게이션
       const btnPrevWeek = document.getElementById('btnPrevWeek');
       const btnThisWeek = document.getElementById('btnThisWeek');
       const btnNextWeek = document.getElementById('btnNextWeek');
@@ -714,51 +638,21 @@
         });
       }
 
-      // 우측 사이드바 등록 폼 제출
-      if (eventForm) {
-        eventForm.addEventListener('submit', async (e) => {
-          e.preventDefault();
-          let sDate = eventStartDateInput.value;
-          let eDate = eventEndDateInput.value;
-
-          if (sDate > eDate) {
-            [sDate, eDate] = [eDate, sDate];
-          }
-
-          try {
-            await addDoc(collection(db, "shared_events"), {
-              title: eventTitleInput.value,
-              startDate: sDate,
-              endDate: eDate,
-              date: sDate,
-              category: eventCategorySelect.value,
-              author: currentUser,
-              createdAt: new Date()
-            });
-            eventTitleInput.value = '';
-          } catch (err) {
-            alert("일정 추가 중 오류가 발생했습니다: " + err.message);
-          }
-        });
-      }
-
-      // 새 일정 등록 모달 취소
+      // 등록 모달 취소
       if (btnCancelAdd) {
         btnCancelAdd.addEventListener('click', () => {
           addModal.style.display = 'none';
         });
       }
 
-      // 새 일정 등록 모달 폼 제출
+      // 새 일정 등록 모달 제출
       if (addEventForm) {
         addEventForm.addEventListener('submit', async (e) => {
           e.preventDefault();
           let sDate = addStartDate.value;
           let eDate = addEndDate.value;
 
-          if (sDate > eDate) {
-            [sDate, eDate] = [eDate, sDate];
-          }
+          if (sDate > eDate) [sDate, eDate] = [eDate, sDate];
 
           try {
             await addDoc(collection(db, "shared_events"), {
@@ -767,10 +661,12 @@
               endDate: eDate,
               date: sDate,
               category: addCategory.value,
+              memo: addMemo.value.trim(),
               author: currentUser,
               createdAt: new Date()
             });
             addTitle.value = '';
+            addMemo.value = '';
             addModal.style.display = 'none';
           } catch (err) {
             alert("일정 추가 오류: " + err.message);
@@ -778,36 +674,14 @@
         });
       }
 
-      // 수동 날짜 입력 변경 시 반영
-      if (eventStartDateInput) {
-        eventStartDateInput.addEventListener('change', () => {
-          startDateSelection = eventStartDateInput.value;
-          if (!eventEndDateInput.value || eventEndDateInput.value < startDateSelection) {
-            eventEndDateInput.value = startDateSelection;
-            endDateSelection = startDateSelection;
-          }
-          renderCalendar();
-        });
-      }
-      if (eventEndDateInput) {
-        eventEndDateInput.addEventListener('change', () => {
-          endDateSelection = eventEndDateInput.value;
-          if (endDateSelection < startDateSelection) {
-            startDateSelection = endDateSelection;
-            eventStartDateInput.value = startDateSelection;
-          }
-          renderCalendar();
-        });
-      }
-
-      // 수정 취소
+      // 수정 모달 취소
       if (btnCancelEdit) {
         btnCancelEdit.addEventListener('click', () => {
           editModal.style.display = 'none';
         });
       }
 
-      // 삭제
+      // 일정 삭제
       const btnDeleteModal = document.getElementById('btnDeleteModal');
       if (btnDeleteModal) {
         btnDeleteModal.addEventListener('click', async () => {
@@ -841,7 +715,8 @@
               startDate: sDate,
               endDate: eDate,
               date: sDate,
-              category: editCategory.value
+              category: editCategory.value,
+              memo: editMemo.value.trim()
             });
             editModal.style.display = 'none';
           } catch (error) {
@@ -851,17 +726,13 @@
       }
     }
 
-    function updateFormDates(start, end) {
-      if (eventStartDateInput) eventStartDateInput.value = start;
-      if (eventEndDateInput) eventEndDateInput.value = end;
-    }
-
     function openEditModal(eventObj) {
       editEventId.value = eventObj.id;
       editTitle.value = eventObj.title;
       editStartDate.value = eventObj.startDate;
       editEndDate.value = eventObj.endDate;
       editCategory.value = eventObj.category || 'work';
+      editMemo.value = eventObj.memo || '';
       editModal.style.display = 'flex';
     }
 
@@ -884,6 +755,7 @@
     }
 
     function escapeHtml(text) {
+      if (!text) return '';
       const div = document.createElement('div');
       div.innerText = text;
       return div.innerHTML;
@@ -893,7 +765,7 @@
       return fixedHolidays[dateStr.slice(5)] || null;
     }
 
-    // 주간 일정 렌더링
+    // 1 & 4. 주간 일정 및 카드 내 메모(Line Clamp) 렌더링
     function renderWeeklyEvents(targetDateInput) {
       const targetDate = targetDateInput ? new Date(targetDateInput) : new Date();
       const { sunday, saturday } = getWeekRange(targetDate);
@@ -922,9 +794,7 @@
         const card = document.createElement('div');
         card.classList.add('weekly-card');
 
-        if (e.color) {
-          card.style.backgroundColor = e.color;
-        } else if (e.category) {
+        if (e.category) {
           card.classList.add(`bg-${e.category}`);
         } else {
           card.style.backgroundColor = '#e0f2fe';
@@ -940,12 +810,21 @@
           dateDisplay = `${parseInt(sm)}.${parseInt(sd)}~${parseInt(em)}.${parseInt(ed)}`;
         }
 
-        card.innerHTML = `
-          <span class="card-date">${dateDisplay}</span>
-          <span class="card-title">${escapeHtml(e.title)}</span>
-          ${e.author ? `<span class="card-author">${escapeHtml(e.author)}</span>` : ''}
+        // 카드 상단 영역 (날짜, 제목, 작성자)
+        let cardContent = `
+          <div class="weekly-card-header">
+            <span class="card-date">${dateDisplay}</span>
+            <span class="card-title">${escapeHtml(e.title)}</span>
+            ${e.author ? `<span class="card-author">${escapeHtml(e.author)}</span>` : ''}
+          </div>
         `;
 
+        // 4. 메모(세부 일정)가 있는 경우 Line Clamp 클래스를 적용하여 표기
+        if (e.memo && e.memo.trim() !== "") {
+          cardContent += `<div class="card-memo">${escapeHtml(e.memo)}</div>`;
+        }
+
+        card.innerHTML = cardContent;
         card.addEventListener('click', () => openEditModal(e));
         listEl.appendChild(card);
       });
@@ -999,11 +878,7 @@
         dayEvents.slice(0, 3).forEach(e => {
           const dot = document.createElement('div');
           dot.classList.add('event-dot');
-          if (e.color) {
-            dot.style.backgroundColor = e.color;
-          } else {
-            dot.classList.add(`bg-${e.category}`);
-          }
+          dot.classList.add(`bg-${e.category || 'work'}`);
           dotsContainer.appendChild(dot);
         });
 
@@ -1011,7 +886,7 @@
           dayCell.appendChild(dotsContainer);
         }
 
-        // 날짜 클릭 시 모달 오픈 및 주간 일정 갱신
+        // 날짜 클릭 시 모달 열기 & 해당 주간 일정으로 포커스
         dayCell.addEventListener('click', () => {
           selectedDateStr = dateStr;
           currentWeeklyDate = new Date(dateStr);
@@ -1021,6 +896,7 @@
             addEndDate.value = dateStr;
           }
           if (addTitle) addTitle.value = '';
+          if (addMemo) addMemo.value = '';
 
           document.querySelectorAll('.day-cell').forEach(el => el.classList.remove('selected-day'));
           dayCell.classList.add('selected-day');
@@ -1033,52 +909,6 @@
       }
 
       renderWeeklyEvents(currentWeeklyDate);
-    }
-
-    // 사이드바 이벤트 리스트 렌더링 & 삭제
-    function renderEventList() {
-      if (!eventList) return;
-      eventList.innerHTML = '';
-      const sortedEvents = [...events].sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
-
-      if (sortedEvents.length === 0) {
-        eventList.innerHTML = '<p style="color: var(--text-muted); font-size: 0.85rem;">등록된 일정이 없습니다.</p>';
-        return;
-      }
-
-      sortedEvents.forEach(e => {
-        const item = document.createElement('div');
-        item.classList.add('event-item');
-
-        const dateText = e.startDate === e.endDate ? e.startDate : `${e.startDate} ~ ${e.endDate}`;
-
-        item.innerHTML = `
-          <div class="event-info">
-            <span class="event-title">${escapeHtml(e.title)}</span>
-            <span class="event-author">작성자: ${escapeHtml(e.author || '익명')}</span>
-            <span class="event-date">${dateText}</span>
-          </div>
-          <div class="event-actions">
-            <button class="btn-edit" data-id="${e.id}">✐</button>
-            <button class="btn-delete" data-id="${e.id}">&times;</button>
-          </div>
-        `;
-        
-        item.querySelector('.btn-edit').addEventListener('click', () => openEditModal(e));
-        item.querySelector('.btn-delete').addEventListener('click', () => deleteEvent(e.id));
-        
-        eventList.appendChild(item);
-      });
-    }
-
-    async function deleteEvent(id) {
-      if (confirm("이 일정을 삭제하시겠습니까?")) {
-        try {
-          await deleteDoc(doc(db, "shared_events", id));
-        } catch (error) {
-          console.error("삭제 실패:", error);
-        }
-      }
     }
   </script>
 </body>
