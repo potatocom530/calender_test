@@ -444,6 +444,7 @@ const firebaseConfig = {
       }
     }
 
+    // 1. 화면에 일정 목록을 그리는 함수 (수정 버튼 추가!)
     function renderEventList() {
       eventList.innerHTML = '';
       const sortedEvents = [...events].sort((a, b) => new Date(a.date) - new Date(b.date));
@@ -462,78 +463,54 @@ const firebaseConfig = {
             <span class="event-author">작성자: ${escapeHtml(e.author || '익명')}</span>
             <span class="event-date">${e.date}</span>
           </div>
-          <button class="btn-delete" data-id="${e.id}">&times;</button>
+          <div class="event-actions">
+            <button class="btn-edit" data-id="${e.id}">수정</button>
+            <button class="btn-delete" data-id="${e.id}">&times;</button>
+          </div>
         `;
         
+        // [수정] 버튼 클릭 이벤트 연결
+        item.querySelector('.btn-edit').addEventListener('click', () => updateEvent(e.id, e.title));
+        
+        // [삭제] 버튼 클릭 이벤트 연결
         item.querySelector('.btn-delete').addEventListener('click', () => deleteEvent(e.id));
+        
         eventList.appendChild(item);
       });
     }
 
+    // 2. 일정 수정 함수 (shared_events 컬렉션 + title 필드 업데이트)
+    async function updateEvent(id, currentTitle) {
+      const newTitle = prompt("수정할 일정 내용을 입력하세요:", currentTitle);
+      
+      // 취소했거나 빈 값이거나 기존 내용과 동일하면 변경 안 함
+      if (!newTitle || newTitle.trim() === "" || newTitle === currentTitle) return;
+
+      try {
+        const docRef = doc(db, "shared_events", id);
+        await updateDoc(docRef, {
+          title: newTitle.trim()
+        });
+        alert("일정이 수정되었습니다!");
+      } catch (error) {
+        console.error("수정 실패:", error);
+        alert("수정 중 오류가 발생했습니다.");
+      }
+    }
+
+    // 3. 일정 삭제 함수
     async function deleteEvent(id) {
       if (confirm("이 일정을 삭제하시겠습니까?")) {
         await deleteDoc(doc(db, "shared_events", id));
       }
     }
 
+    // HTML 특수문자 이스케이프
     function escapeHtml(text) {
       const div = document.createElement('div');
       div.innerText = text;
       return div.innerHTML;
     }
-
-
-    // 일정 수정 함수
-async function updateSchedule(docId, currentText) {
-  // 1. 사용자에게 새로 변경할 내용을 입력받음
-  const newText = prompt("수정할 내용을 입력하세요:", currentText);
-  
-  // 취소 버튼을 누르거나 빈 값을 입력하면 실행하지 않음
-  if (!newText || newText.trim() === "" || newText === currentText) return;
-
-  try {
-    // 2. 해당 문서(doc)의 내용을 Firestore에서 업데이트
-    const docRef = doc(db, "schedules", docId); // 'schedules'는 Firestore 컬렉션 이름
-    await updateDoc(docRef, {
-      text: newText.trim() // 'text' 필드를 새 내용으로 변경
-    });
-    alert("일정이 수정되었습니다!");
-  } catch (error) {
-    console.error("수정 실패:", error);
-    alert("수정 중 오류가 발생했습니다.");
-  }
-}
-    // Firestore 실시간 데이터 불러오기 (onSnapshot) 안의 목록 생성 부분 예시
-onSnapshot(collection(db, "schedules"), (snapshot) => {
-  const listElement = document.getElementById("scheduleList");
-  listElement.innerHTML = ""; // 기존 목록 초기화
-
-  snapshot.docs.forEach((doc) => {
-    const data = doc.data();
-    const id = doc.id;
-
-    // HTML 태그 생성
-    const li = document.createElement("li");
-    li.innerHTML = `
-      <span>${data.text}</span>
-      <button class="edit-btn">수정</button>
-      <button class="delete-btn">삭제</button>
-    `;
-
-    // [수정] 버튼 이벤트 연결
-    li.querySelector(".edit-btn").addEventListener("click", () => {
-      updateSchedule(id, data.text);
-    });
-
-    // [삭제] 버튼 이벤트 연결 (기존 삭제 코드)
-    li.querySelector(".delete-btn").addEventListener("click", () => {
-      deleteSchedule(id);
-    });
-
-    listElement.appendChild(li);
-  });
-});
-    
   </script>
 </body>
 </html>
