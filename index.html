@@ -396,7 +396,7 @@
       <h2>🔒 캘린더 접속</h2>
       <p>공유받은 비밀번호를 입력하세요.</p>
       <input type="password" id="accessPassword" placeholder="비밀번호 입력" style="width:100%; padding:12px; margin-bottom:12px; border:1px solid var(--border-color); border-radius:8px;">
-      <input type="text" id="userName" placeholder="내 이름 (예: 홍길동)" value="익명" style="width:100%; padding:12px; margin-bottom:12px; border:1px solid var(--border-color); border-radius:8px;">
+      <input type="text" id="userName" placeholder="내 이름" value="익명" style="width:100%; padding:12px; margin-bottom:12px; border:1px solid var(--border-color); border-radius:8px;">
       <button class="btn-submit" id="btnAuth">입장하기</button>
     </div>
   </div>
@@ -481,9 +481,9 @@
           <div class="form-group">
             <label for="eventCategory">카테고리</label>
             <select id="eventCategory">
-              <option value="work">업무 (파스텔 하늘)</option>
-              <option value="personal">개인 (파스텔 노랑)</option>
-              <option value="important">중요 (파스텔 핑크)</option>
+              <option value="work">업무</option>
+              <option value="personal">개인</option>
+              <option value="important">중요</option>
             </select>
           </div>
           <button type="submit" class="btn-submit">일정 공유하기</button>
@@ -500,7 +500,7 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getFirestore, collection, addDoc, deleteDoc, doc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-    const SHARE_PASSWORD = "1201";
+    const SHARE_PASSWORD = "1131";
 
     const firebaseConfig = {
       apiKey: "AIzaSyA4YGzWCDYlhRVui6aELfFeg4Y0-34t2eQ",
