@@ -206,22 +206,24 @@
     .grid-days { gap: 6px; }
 
     /* 달력 셀 스타일 */
-    .day-cell {
-      aspect-ratio: 1 / 1;
-      padding: 4px;
-      position: relative;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-start;
-      box-sizing: border-box;
-      overflow: hidden;
-      border-radius: 10px;
-      border: 1px solid var(--border-color, #e2e8f0);
-      background: #ffffff;
-      cursor: pointer;
-      transition: background 0.15s, border-color 0.15s;
-    }
+   /* [수정] 달력 셀: 높이 및 내부 정렬 조정 */
+.day-cell {
+  aspect-ratio: auto;       /* 일정 바 표시를 위해 고정 비율 해제 */
+  min-height: 85px;         /* 일정들이 잘 보일 수 있는 최소 높이 설정 */
+  padding: 4px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;     /* 자식 요소(바)가 가로로 채워지도록 연장 */
+  justify-content: flex-start;
+  box-sizing: border-box;
+  overflow: hidden;
+  border-radius: 10px;
+  border: 1px solid var(--border-color, #e2e8f0);
+  background: #ffffff;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
 
     .day-cell:hover { border-color: var(--primary-color); background: #f4f5ff; }
     .day-cell.empty { background: transparent; border: none; cursor: default; }
@@ -232,31 +234,57 @@
       background-color: #e0e7ff !important;
     }
 
-    .day-number { 
-      font-size: 0.75rem; 
-      font-weight: 600; 
-      margin-bottom: 2px; 
-    }
+.day-number { 
+  font-size: 0.75rem; 
+  font-weight: 600; 
+  margin-bottom: 3px; 
+  text-align: center;
+}
     
     .day-cell.sat .day-number { color: var(--color-saturday); }
     .day-cell.sun .day-number,
     .day-cell.holiday .day-number { color: var(--color-sunday); }
 
-    /* 파스텔/뉴트럴 도트 */
-    .dots-container {
-      display: flex;
-      gap: 3px;
-      margin-top: 4px;
-      justify-content: center;
-      flex-wrap: wrap;
-    }
+   /* [신규] 일정 바 컨테이너 */
+.bars-container {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+}
 
-    .event-dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-    }
-    .dot-holiday { background-color: var(--cat-holiday); }
+/* [신규] 길다란 일정 바(Bar) 스타일 */
+.event-bar {
+  width: 100%;
+  height: 18px;
+  line-height: 18px;
+  padding: 0 4px;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  color: #0f172a;
+  font-weight: 500;
+  text-align: left;
+  white-space: nowrap;       /* 줄바꿈 방지 */
+  overflow: hidden;          /* 자른 글자 숨김 */
+  text-overflow: ellipsis;   /* 긴 제목 ... 처리 */
+  box-sizing: border-box;
+}
+
+/* [신규] 공휴일 전용 바 스타일 */
+.bar-holiday {
+  background-color: var(--cat-holiday);
+  color: #881337;
+  font-weight: 600;
+}
+
+/* [신규] 일정 초과 (+N) 표시 */
+.more-count {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  text-align: left;
+  padding-left: 2px;
+  margin-top: 1px;
+}
 
     /* 하단 주간 일정 영역 */
     .weekly-section {
@@ -1212,87 +1240,106 @@
       });
     }
 
-    // 달력 렌더링
-    function renderCalendar() {
-      const year = currentDate.getFullYear();
-      const month = currentDate.getMonth();
+// 달력 렌더링
+function renderCalendar() {
+  const year = currentDate.getFullYear();
+  const month = currentDate.getMonth();
 
-      monthYearText.textContent = `${year}년 ${month + 1}월`;
-      calendarGrid.innerHTML = '';
+  monthYearText.textContent = `${year}년 ${month + 1}월`;
+  calendarGrid.innerHTML = '';
 
-      const firstDay = new Date(year, month, 1).getDay();
-      const lastDate = new Date(year, month + 1, 0).getDate();
-      const todayStr = formatDateStr(new Date());
+  const firstDay = new Date(year, month, 1).getDay();
+  const lastDate = new Date(year, month + 1, 0).getDate();
+  const todayStr = formatDateStr(new Date());
 
-      for (let i = 0; i < firstDay; i++) {
-        const emptyCell = document.createElement('div');
-        emptyCell.classList.add('day-cell', 'empty');
-        calendarGrid.appendChild(emptyCell);
-      }
+  for (let i = 0; i < firstDay; i++) {
+    const emptyCell = document.createElement('div');
+    emptyCell.classList.add('day-cell', 'empty');
+    calendarGrid.appendChild(emptyCell);
+  }
 
-      for (let day = 1; day <= lastDate; day++) {
-        const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-        const dayOfWeek = new Date(year, month, day).getDay();
-        const holidayName = getHolidayName(dateStr);
+  for (let day = 1; day <= lastDate; day++) {
+    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    const dayOfWeek = new Date(year, month, day).getDay();
+    const holidayName = getHolidayName(dateStr);
 
-        const dayCell = document.createElement('div');
-        dayCell.classList.add('day-cell');
+    const dayCell = document.createElement('div');
+    dayCell.classList.add('day-cell');
 
-        if (dayOfWeek === 0) dayCell.classList.add('sun');
-        if (dayOfWeek === 6) dayCell.classList.add('sat');
-        if (holidayName) dayCell.classList.add('holiday');
-        if (dateStr === todayStr) dayCell.classList.add('today');
-        if (dateStr === selectedDateStr) dayCell.classList.add('selected-day');
+    if (dayOfWeek === 0) dayCell.classList.add('sun');
+    if (dayOfWeek === 6) dayCell.classList.add('sat');
+    if (holidayName) dayCell.classList.add('holiday');
+    if (dateStr === todayStr) dayCell.classList.add('today');
+    if (dateStr === selectedDateStr) dayCell.classList.add('selected-day');
 
-        dayCell.innerHTML = `<div class="day-number">${day}</div>`;
+    dayCell.innerHTML = `<div class="day-number">${day}</div>`;
 
-        const dotsContainer = document.createElement('div');
-        dotsContainer.classList.add('dots-container');
+    // --- [변경 구간] 점(Dot) 대신 긴 바(Bar) 형태의 일정 컨테이너 생성 ---
+    const barsContainer = document.createElement('div');
+    barsContainer.classList.add('bars-container');
 
-        if (holidayName) {
-          const holidayDot = document.createElement('div');
-          holidayDot.classList.add('event-dot', 'dot-holiday');
-          holidayDot.title = holidayName;
-          dotsContainer.appendChild(holidayDot);
-        }
-
-        const dayEvents = events.filter(e => dateStr >= e.startDate && dateStr <= e.endDate);
-        dayEvents.slice(0, 3).forEach(e => {
-          const dot = document.createElement('div');
-          dot.classList.add('event-dot');
-          dot.style.backgroundColor = e.color || '#d1e0d7';
-          dotsContainer.appendChild(dot);
-        });
-
-        if (holidayName || dayEvents.length > 0) {
-          dayCell.appendChild(dotsContainer);
-        }
-
-        dayCell.addEventListener('click', () => {
-          selectedDateStr = dateStr;
-          currentWeeklyDate = new Date(dateStr);
-
-          if (addStartDate && addEndDate) {
-            addStartDate.value = dateStr;
-            addEndDate.value = dateStr;
-          }
-          if (addTitle) addTitle.value = '';
-          if (addMemo) addMemo.value = '';
-
-          document.querySelectorAll('.day-cell').forEach(el => el.classList.remove('selected-day'));
-          dayCell.classList.add('selected-day');
-
-          if (addModal) addModal.style.display = 'flex';
-          
-          syncMonthWithWeek(currentWeeklyDate);
-          renderCalendar();
-        });
-
-        calendarGrid.appendChild(dayCell);
-      }
-
-      renderWeeklyEvents(currentWeeklyDate);
+    // 1. 공휴일 띠
+    if (holidayName) {
+      const holidayBar = document.createElement('div');
+      holidayBar.classList.add('event-bar', 'bar-holiday');
+      holidayBar.textContent = holidayName;
+      holidayBar.title = holidayName;
+      barsContainer.appendChild(holidayBar);
     }
+
+    // 2. 해당 날짜에 해당하는 일정 추출 (최대 2~3개까지 표시)
+    const dayEvents = events.filter(e => dateStr >= e.startDate && dateStr <= e.endDate);
+    
+    // 셀 높이에 맞추어 최대 2개(공휴일 포함 시) 혹은 3개만 표시
+    const maxShow = holidayName ? 2 : 3;
+    
+    dayEvents.slice(0, maxShow).forEach(e => {
+      const bar = document.createElement('div');
+      bar.classList.add('event-bar');
+      bar.style.backgroundColor = e.color || '#d1e0d7';
+      bar.textContent = e.title || '일정';
+      bar.title = `${e.title || '일정'} (${e.startDate} ~ ${e.endDate})`;
+      barsContainer.appendChild(bar);
+    });
+
+    // 넘어가는 일정 개수 표시 (+N개)
+    if (dayEvents.length > maxShow) {
+      const moreCount = document.createElement('div');
+      moreCount.classList.add('more-count');
+      moreCount.textContent = `+${dayEvents.length - maxShow}`;
+      barsContainer.appendChild(moreCount);
+    }
+
+    if (holidayName || dayEvents.length > 0) {
+      dayCell.appendChild(barsContainer);
+    }
+    // -------------------------------------------------------------
+
+    dayCell.addEventListener('click', () => {
+      selectedDateStr = dateStr;
+      currentWeeklyDate = new Date(dateStr);
+
+      if (addStartDate && addEndDate) {
+        addStartDate.value = dateStr;
+        addEndDate.value = dateStr;
+      }
+      if (addTitle) addTitle.value = '';
+      if (addMemo) addMemo.value = '';
+
+      document.querySelectorAll('.day-cell').forEach(el => el.classList.remove('selected-day'));
+      dayCell.classList.add('selected-day');
+
+      if (addModal) addModal.style.display = 'flex';
+      
+      syncMonthWithWeek(currentWeeklyDate);
+      renderCalendar();
+    });
+
+    calendarGrid.appendChild(dayCell);
+  }
+
+  renderWeeklyEvents(currentWeeklyDate);
+}
   </script>
 </body>
 </html>
